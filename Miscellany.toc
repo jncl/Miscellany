@@ -3,11 +3,5 @@
 ## Author: Jncl
 ## Version: 1.0
 ## Notes: A collection of functions to change the UI etc
-## DefaultState: Enabled
-## LoadOnDemand: 0
-## OptionalDeps:
-## SavedVariables: MiscellanyDB
 
-AceEvent-3.0\AceEvent-3.0.xml
-AceTimer-3.0\AceTimer-3.0.xml
 Miscellany.lua

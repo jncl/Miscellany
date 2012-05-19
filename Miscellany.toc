@@ -1,11 +1,12 @@
-## Interface: 40000
+## Interface: 40300
 ## Title: Miscellany
 ## Author: Jncl
 ## Version: 1.0
 ## Notes: A collection of functions to change the UI etc
 
-# LibStub
-libs\LibStub.lua
+# LibStub & Callback Handler
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
 #Ace3 Libraries
 libs\AceEvent-3.0\AceEvent-3.0.xml
 libs\AceHook-3.0\AceHook-3.0.xml

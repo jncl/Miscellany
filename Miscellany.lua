@@ -1,354 +1,35 @@
 local aName, aObj = ...
+local _G = _G
 
-local uCls = select(2, UnitClass("player"))
+local assert, print, select, stringf, pairs = _G.assert, _G.print, _G.select, _G.string.format, _G.pairs
+local CreateFrame, LibStub = _G.CreateFrame, _G.LibStub
+local GetCVar, SetCVar, GetCVarBool = _G.GetCVar, _G.SetCVar, _G.GetCVarBool
+-- SV's
+local battle_pets = _G.battle_pets
+
+aObj.debug = true
+
+local function printD(...)
+	if not aObj.debug then return end
+	print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
+end
 
 -- check to see if required libraries are loaded
 assert(LibStub, aName.." requires LibStub")
-for _, lib in pairs{"AceTimer-3.0", "AceEvent-3.0", "AceHook-3.0"} do
-	assert(LibStub:GetLibrary(lib, true), aName.." requires "..lib)
+for _, lib in _G.pairs{"AceTimer-3.0", "AceEvent-3.0", "AceHook-3.0"} do
+	assert(LibStub:GetLibrary(lib, true), aName .. " requires " .. lib)
 end
-local at, ae, ah = LibStub("AceTimer-3.0"), LibStub("AceEvent-3.0"), LibStub("AceHook-3.0")
+aObj.ah = LibStub("AceHook-3.0")
+aObj.at = LibStub("AceTimer-3.0")
+aObj.ae = LibStub("AceEvent-3.0")
 
--- track PLAYER_LOGIN event for EquipmentSet changes
-ae.RegisterEvent(aName, "PLAYER_LOGIN", function(event, addon)
-	-- change EquipmentSet when stealthed, based upon EventEquip function
-	if uCls == "ROGUE"
-	and GetNumEquipmentSets() > 0
-	and GetEquipmentSetInfoByName("Stealth")
-	then
-		local function checkAndEquip(eSet)
-			local sTime, eTime = select(5, UnitCastingInfo("player"))
-			if eTime then -- casting in progress, equip after cast has finished, otherwise error and not equipped
-				at:ScheduleTimer(function(eSet)
-					EquipmentManager_EquipSet(eSet)
-				end, (eTime - sTime) / 1000 + 0.1, eSet)
-			else
-				EquipmentManager_EquipSet(eSet)
-			end
-		end
-		print(aName, "- Rogue's Stealth EquipmentSet detected")
-		local curSet, shifted = "Normal", false
-		ah:SecureHook("UseEquipmentSet", function(setName)
-			if not shifted then curSet = setName end
-		end)
-		ae:RegisterEvent("UPDATE_SHAPESHIFT_FORM", function ()
-			local name, active
-			for i = 1, GetNumShapeshiftForms() do
-				_, name, active = GetShapeshiftFormInfo(i)
-				if active and GetEquipmentSetInfoByName(name) then
-					shifted = true
-					checkAndEquip(name) -- equip shapeshift set if it exists
-					return
-				end
-			end
-			shifted = false
-			checkAndEquip(curSet) -- re-equip previous set
-		end)
-	end
-	ae.UnregisterEvent(aName, "PLAYER_LOGIN")
+local buildInfo = {_G.GetBuildInfo()}
+local portal = _G.GetCVar("portal") or nil
 
-end)
+local uCls = select(2, _G.UnitClass("player"))
 
--- track ADDON_LOADED event for TradeSkillUI changes
-ae.RegisterEvent(aName, "ADDON_LOADED", function(event, addon)
-	if addon == "Blizzard_TradeSkillUI" then
-		-- resize Tradeskill frame
-		-- taken from FramesResized, credit to Elkano
-		local frame
-		for i = TRADE_SKILLS_DISPLAYED + 1, TRADE_SKILLS_DISPLAYED * 2 do
-			frame = CreateFrame("Button", "TradeSkillSkill"..i, TradeSkillFrame, "TradeSkillSkillButtonTemplate")
-			frame:SetPoint("TOPLEFT", _G["TradeSkillSkill"..(i - 1)], "BOTTOMLEFT")
-		end
-		local adj = TRADE_SKILLS_DISPLAYED * TRADE_SKILL_HEIGHT
-		TRADE_SKILLS_DISPLAYED = TRADE_SKILLS_DISPLAYED * 2
-		TradeSkillFrame:SetHeight(472 + adj)
-		TradeSkillListScrollFrame:SetHeight(130 + adj)
-		TradeSkillDetailScrollFrame:SetPoint("TOPLEFT", 8, -(234 + adj))
-		TradeSkillDetailScrollFrame:SetHeight(208)
-		TradeSkillCancelButton:ClearAllPoints()
-		TradeSkillCancelButton:SetPoint("BOTTOMRIGHT", TradeSkillFrame, "BOTTOMRIGHT", -6, 6)
-		ae.UnregisterEvent(aName, "ADDON_LOADED")
-	end
-end)
-
--- check for Blade Flurry buff, hide ShapeshiftBar
-local check_for_bf, bfEvt
-if uCls == "ROGUE" then
-	function check_for_bf()
-		b = UnitBuff("player", "Blade Flurry")
-		if b then
-			UIErrorsFrame:AddMessage("Disable Blade Flurry", 1.0, 0.0, 0.0, nil, 5)
-			if not bfEvt then bfEvt = at:ScheduleRepeatingTimer(check_for_bf, 5) end
-		else
-			at:CancelTimer(bfEvt, true)
-			bfEvt = nil
-		end
-	end
-	-- hide ShapeshiftBar Frame
-	ShapeshiftBarFrame.Show = function () end
-	ShapeshiftBarFrame:Hide()
-end
-
--- handle in Combat situations
-local inCombat = InCombatLockdown()
-ae.RegisterEvent(aName, "PLAYER_REGEN_DISABLED", function(...)
-	inCombat = true
-	UIErrorsFrame:AddMessage("YOU ARE UNDER ATTACK.", 1, 0, 0)
-	SetCVar("nameplateShowEnemies", 1)
-	-- equip "Normal" set if a fishing pole is equipped
-	local mH = GetInventoryItemLink("player", GetInventorySlotInfo("MainHandSlot"))
-	if mH then
-		local itemType = select(7, GetItemInfo(mH))
-		if itemType == "Fishing Poles"
-		and GetNumEquipmentSets() > 0
-		then
-			EquipmentManager_EquipSet("Normal")
-		end
-	end
-	at:CancelTimer(bfEvt, true)
-	bfEvt = nil
-end)
-ae.RegisterEvent(aName, "PLAYER_REGEN_ENABLED", function(...)
-	inCombat = false
-	UIErrorsFrame:AddMessage("Finished fighting.", 1, 1, 0)
-	SetCVar("nameplateShowEnemies", 0)
-	-- check for Blade Flurry if Rogue
-	if uCls == "ROGUE" then check_for_bf() end
-end)
-
--- Change Watch Frame font
-WATCHFRAME_LINEHEIGHT = 12
-WATCHFRAME_MULTIPLE_LINEHEIGHT = 21
-WATCHFRAMELINES_FONTHEIGHT = 10;
-WATCHFRAMELINES_FONTSPACING = (WATCHFRAME_LINEHEIGHT - WATCHFRAMELINES_FONTHEIGHT) / 2
-local function changeFont(line)
-	local fontName, _, fontFlags = line.text:GetFont()
-	line.text:SetFont(fontName, 10, fontFlags)
-	line.dash:SetFont(fontName, 10, fontFlags)
-end
-for i = 1, #WatchFrame.lineCache.frames do
-	changeFont(WatchFrame.lineCache.frames[i])
-end
-for i = 1, #WatchFrame.lineCache.usedFrames do
-	changeFont(WatchFrame.lineCache.usedFrames[i])
-end
-ah:SecureHook(UIFrameCache, "GetFrame", function()
-	for i = 1, #WatchFrame.lineCache.usedFrames do
-		changeFont(WatchFrame.lineCache.usedFrames[i])
-	end
-end)
-
--- delete item from Bag if Alt+Right Clicked
-ah:SecureHook("ContainerFrameItemButton_OnModifiedClick", function(self, button)
---    print("CFIB_OMC", self, button)
-    if button == "RightButton"
-    and IsAltKeyDown()
-    then
-        PickupContainerItem(self:GetParent():GetID(), self:GetID())
-        DeleteCursorItem()
-    end
-end)
-
--- setup & populate groups for Auto-Bag
-if IsAddOnLoaded("Auto-Bag") then
-	print(aName, "- Auto-Bag detected, creating groups")
-
-    AB_SEARCHGROUPS["AH_items"] = {}
-    table.insert(AB_SEARCHGROUPS["AH_items"], "Pattern: *")
-    table.insert(AB_SEARCHGROUPS["AH_items"], "Formula: *")
-    table.insert(AB_SEARCHGROUPS["AH_items"], "Recipe: *")
-    table.insert(AB_SEARCHGROUPS["AH_items"], "Schematic: *")
-    table.insert(AB_SEARCHGROUPS["AH_items"], "Plans: *")
-    table.insert(AB_SEARCHGROUPS["AH_items"], "Design: *")
-    table.insert(AB_SEARCHGROUPS["AH_items"], "Technique: *")
-
-    AB_SEARCHGROUPS["enchanter"] = {}
-    table.insert(AB_SEARCHGROUPS["enchanter"], "* Dust")
-    table.insert(AB_SEARCHGROUPS["enchanter"], "* Essence")
-    table.insert(AB_SEARCHGROUPS["enchanter"], "* Shard")
-
-    AB_SEARCHGROUPS["tailor"] = {}
-    table.insert(AB_SEARCHGROUPS["tailor"], "* Cloth")
-    table.insert(AB_SEARCHGROUPS["tailor"], "Runecloth")
-    table.insert(AB_SEARCHGROUPS["tailor"], "Felcloth")
-    table.insert(AB_SEARCHGROUPS["tailor"], "Bolt of *")
-
-    AB_SEARCHGROUPS["miner"] = {}
-    table.insert(AB_SEARCHGROUPS["miner"], "* Ore")
-    table.insert(AB_SEARCHGROUPS["miner"], "* Stone")
-    table.insert(AB_SEARCHGROUPS["miner"], "* Bar")
-
-    AB_SEARCHGROUPS["skinner"] = {}
-    table.insert(AB_SEARCHGROUPS["skinner"], "* Leather Scraps")
-    table.insert(AB_SEARCHGROUPS["skinner"], "* Leather")
-    table.insert(AB_SEARCHGROUPS["skinner"], "* Hide")
-    table.insert(AB_SEARCHGROUPS["skinner"], "* Scale")
-
-    AB_SEARCHGROUPS["digger"] = {}
-    table.insert(AB_SEARCHGROUPS["digger"], "Dwarf Rune Stone")
-    table.insert(AB_SEARCHGROUPS["digger"], "Highborne Scroll")
-    table.insert(AB_SEARCHGROUPS["digger"], "Troll Tablet")
-    table.insert(AB_SEARCHGROUPS["digger"], "Orc Blood Text") -- Skill >= 300
-    table.insert(AB_SEARCHGROUPS["digger"], "Draenei Tome") -- Skill >=300
-    table.insert(AB_SEARCHGROUPS["digger"], "Nerubian Obelisk") -- Skill >= 375
-    table.insert(AB_SEARCHGROUPS["digger"], "Vrykul Rune Stick") -- Skill >= 375
-    table.insert(AB_SEARCHGROUPS["digger"], "Tol'vir Hieroglyphic") -- Skill >= 450
-
-    AB_SEARCHGROUPS["elementals"] = {}
-    table.insert(AB_SEARCHGROUPS["elementals"], "Essence of *")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Eternal *")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Primal *")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Mote of *")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Crystallized *")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Elemental *")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Volatile *")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Living Essence")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Breath of Wind")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Core of Earth")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Globe of Water")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Heart of Fire")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Heart of the Wild")
-    table.insert(AB_SEARCHGROUPS["elementals"], "Ichor of Undeath")
-
-    AB_SEARCHGROUPS["mage"] = {}
-    table.insert(AB_SEARCHGROUPS["mage"], "Light feather")
-    table.insert(AB_SEARCHGROUPS["mage"], "Conjured Mana *")
-    table.insert(AB_SEARCHGROUPS["mage"], "Mana Gem")
-    table.insert(AB_SEARCHGROUPS["mage"], "Rune of *")
-
-    AB_SEARCHGROUPS["rogue"] = {}
-    table.insert(AB_SEARCHGROUPS["rogue"], "* Poison")
-
-    AB_SEARCHGROUPS["fish"] = {}
-    table.insert(AB_SEARCHGROUPS["fish"], "Raw *")
-    table.insert(AB_SEARCHGROUPS["fish"], "*Snapper")
-    table.insert(AB_SEARCHGROUPS["fish"], "Oily *")
-    table.insert(AB_SEARCHGROUPS["fish"], "*fish")
-    table.insert(AB_SEARCHGROUPS["fish"], "Sharptooth")
-
-    AB_SEARCHGROUPS["herbs"] = {}
-    table.insert(AB_SEARCHGROUPS["herbs"], "Silverleaf")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Peacebloom")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Earthroot")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Mageroyal")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Briarthorn")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Swiftthistle")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Bruiseweed")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Stranglekelp")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Grave Moss")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Wild Steelbloom")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Kingsblood")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Liferoot")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Fadeleaf")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Goldthorn")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Khadgar's Whisker")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Dragon's Teeth")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Wildvine")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Firebloom")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Purple Lotus")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Arthas' Tears")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Sungrass")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Blindweed")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Ghost Mushroom")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Gromsblood")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Golden Sansam")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Dreamfoil")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Mountain Silversage")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Sorrowmoss")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Icecap")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Blood Scythe") -- used to collect Blood Vine from Zul'Gurub flora
-    table.insert(AB_SEARCHGROUPS["herbs"], "Black Lotus")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Blood Vine")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Dreaming Glory") -- TBC onwards
-    table.insert(AB_SEARCHGROUPS["herbs"], "Felweed")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Teracone")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Ragveil")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Flame Cap")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Ancient Lichen")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Fel Lotus")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Mana Thistle")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Nightmare Seed") -- WotLK onwards
-    table.insert(AB_SEARCHGROUPS["herbs"], "Nightmare Vine")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Deadnettle")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Goldclover")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Talandra's Rose")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Tiger Lily")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Fire Leaf")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Adder's Tongue")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Frost Lotus")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Icethorn")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Lichbloom")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Cinderbloom") -- Cata onwards
-    table.insert(AB_SEARCHGROUPS["herbs"], "Azshara's Veil")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Stormvine")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Heartblossom")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Whiptail")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Deathspore Pod")
-    table.insert(AB_SEARCHGROUPS["herbs"], "Twilight Jasmine")
-
-
-end
-
--- fix duplicate BugSack Minimap/Docking Station icons
-if IsAddOnLoaded("BugSack") then
-	if not BugSackLDBIconDB then BugSackLDBIconDB = {} end
-	if IsAddOnLoaded("DockingStation") then
-		BugSackLDBIconDB.hide = true -- turn off minimap icon
-		LibStub("LibDBIcon-1.0", true):Hide("BugSack")
-	else
-		BugSackLDBIconDB.hide = false -- turn on minimap icon
-		-- LibStub("LibDBIcon-1.0", true):Show("BugSack")
-	end
-end
-
--- resize TaxiFrame
-TaxiFrame:SetScale(1.5)
--- resize MinimapCluster
-MinimapCluster:SetScale(1.25)
-
--- Get Quest Info
-SLASH_MISC1 = '/misc'
-
--- Cloth handin rep quests
-clothQuests = {
-	["Stormwind"] = {
-		[7791] = "Wool",
-		[7793] = "Silk",
-		[7794] = "Mageweave",
-		[7795] = "Runecloth",
-		[7796] = "More Runecloth",
-	},
-	["Exodar"] = {
-		[7792] = "Wool",
-		[7798] = "Silk",
-		[10356] = "Mageweave",
-		[10357] = "Runecloth",
-		[10358] = "More Runecloth",
-	},
-	["Ironforge"] = {
-		[7802] = "Wool",
-		[7803] = "Silk",
-		[7804] = "Mageweave",
-		[7805] = "Runecloth",
-		[7806] = "More Runecloth",
-	},
-	["Gnomeregan"] = {
-		[7807] = "Wool",
-		[7808] = "Silk",
-		[7809] = "Mageweave",
-		[7811] = "Runecloth",
-		[7812] = "More Runecloth",
-	},
-	["Darnassus"] = {
-		[10352] = "Wool",
-		[10354] = "Silk",
-		[7799] = "Mageweave",
-		[7800] = "Runecloth",
-		[7810] = "More Runecloth",
-	},
-}
 -- Chicken rescue quests
-chickenQuests = {
+local chickenQuests = {
 	["Tanaris"] = {
 		[351] = "Find",
 		[648] = "Rescue",
@@ -363,23 +44,23 @@ chickenQuests = {
 	},
 }
 
-local qTab, qType, loud, debug = {}
+_G.SLASH_MISC1 = '/misc'
+local qTab, qType, loud = {}, nil, false
 function SlashCmdList.MISC(msg, editbox)
 
 	-- get Completed quest info
 	if msg == "chicken"
-	or msg == "cloth"
 	then
-		if debug then print("registering event") end
-		ae.RegisterEvent(aName, "QUEST_QUERY_COMPLETE", function(...)
-			if debug then print ("QUEST_QUERY_COMPLETE", ..., #...) end
+		-- printD("registering event")
+		aObj.ae.RegisterEvent(aName, "QUEST_QUERY_COMPLETE", function(...)
+			-- printD("QUEST_QUERY_COMPLETE", ..., #...)
 
-			GetQuestsCompleted(qTab)
-			if debug then print("No. Completed Quests", #qTab) end
+			_G.GetQuestsCompleted(qTab)
+			-- printD("No. Completed Quests", #qTab)
 
-			for k, v in ipairs(qType == "chicken" and chickenQuests or clothQuests) do
+			for k, v in _G.ipairs(qType == "chicken" and chickenQuests) do
 				print(k, qType, "quests:")
-				for k2, v2 in ipairs(v) do
+				for k2, v2 in _G.ipairs(v) do
 					if not qTab[k2] then
 						print("==>", v2, "incomplete")
 					else
@@ -388,38 +69,68 @@ function SlashCmdList.MISC(msg, editbox)
 				end
 			end
 
-			ae.UnregisterEvent(aName, "QUEST_QUERY_COMPLETE")
+			aObj.ae.UnregisterEvent(aName, "QUEST_QUERY_COMPLETE")
 
 		end)
-		if debug then print("requesting completed quest info") end
-		QueryQuestsCompleted()
+		-- printD("requesting completed quest info")
+		_G.QueryQuestsCompleted()
 		qType = msg
 	elseif msg == "debug" then
-		debug = not debug
-	elseif msg == "loud" then
-		loud = not loud
+		aObj.debug = not aObj.debug
+		_G.print("Debug ", aObj.debug and "enabled" or "disabled")
+	elseif msg == "loud" then loud = not loud
+	elseif msg == "sf" then aObj:startFishing()
+	elseif msg == "ef" then aObj:endFishing()
+	elseif msg == "bpet" then battle_pets = not battle_pets
+	-- MoP specific
+	elseif msg == "tic" then aObj:timelessIsleChests()
+	elseif msg == "itc" then aObj:isleOfThunderChests()
+	elseif msg == "pt" then aObj:pandariaTreasures()
+	elseif msg == "pl" then aObj:loreObjects()
+	-- legion specific
+	elseif msg == "lth" then aObj:checkLTQHighmountain()
+	elseif msg == "ltq" then aObj:checkLTQ(msg)
+	-- Jostle
+	elseif msg == "cbj" then aObj:cbJostle()
+		-- EquipmentSet info
+	elseif msg == "esi" then
+		local esNum = _G.C_EquipmentSet.GetNumEquipmentSets()
+		_G.print("GetNumEquipmentSets()", esNum)
+		for i = 0, esNum - 1 do
+			_G.print(i, _G.C_EquipmentSet.GetEquipmentSetInfo(i))
+		end
+	-- enable Automatic Quest Tracking
+	elseif msg == "atq_on" then
+		_G.SetCVar("autoQuestWatch", 1)
+		_G.ReloadUI()
+	elseif msg == "atq_off" then
+		_G.SetCVar("autoQuestWatch", 0r)
+		_G.ReloadUI()
 	end
-
-	if debug then print(msg, editbox) end
+	-- printD("slash command:", msg, editbox)
 
 end
 
 -- ==> The following event actions are taken from Reactive Macros
 local function __Msg(opts)
 
-	if not loud and not opts.show then return end
+	if not aObj.debug
+	or not loud and not opts.show
+	then
+		return
+	end
 
-	DEFAULT_CHAT_FRAME:AddMessage(aName..": "..opts.msg, opts.r, opts.g, opts.b)
+	_G.DEFAULT_CHAT_FRAME:AddMessage(aName..": "..opts.msg, opts.r, opts.g, opts.b)
 
 end
-function Msg(...)
+local function Msg(...)
 
 	local opts = select(1, ...)
 
 	-- handle missing message
 	if not opts then return end
 
-	if type(opts) == "string" then
+	if _G.type(opts) == "string" then
 		-- old style call
 		opts = {}
 		opts.msg = select(1, ...) and select(1, ...) or ""
@@ -431,97 +142,440 @@ function Msg(...)
 
 end
 
--- AutoRepair by Ygrane, using GuildBank if available and in funds
-ae.RegisterEvent(aName, "MERCHANT_SHOW", function(...)
-	local gbMoney, repairAllCost, canRepair = GetGuildBankMoney(), GetRepairAllCost()
-	if canRepair then RepairAllItems(repairAllCost <= gbMoney and CanGuildBankRepair() or nil) end
+-- track PLAYER_LOGIN event for EquipmentSet changes
+aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(event, addon)
+	-- if a Hunter and in a Garrison then stop tracking Stable Masters
+	if uCls == "HUNTER" then
+		local function chgTracking(type, state)
+			-- printD("chgTracking:", type, state)
+			for i = 1, _G.GetNumTrackingTypes() do
+				local name, texture, active, category, nested = _G.GetTrackingInfo(i)
+				if type == name then
+					-- printD("TrackingInfo:", i, name, texture, active, category, nested)
+					if state ~= active then
+						-- printD("Setting" .. name .. " tracking " .. (state and "on" or "off"))
+						_G.SetTracking(i, state)
+						break
+					end
+				end
+			end
+		end
+		local function chkSM()
+			local rZone = _G.GetRealZoneText()
+			-- printD("chkSM:", rZone)
+			if rZone == "Lunarfall" -- Alliance Garrison
+			or rZone == "Frostwall" -- Horde Garrison
+			then
+				chgTracking("Stable Master", false)
+			else
+				chgTracking("Stable Master", true)
+			end
+		end
+		aObj.ae.RegisterEvent(aName, "ZONE_CHANGED_NEW_AREA", function()
+			-- printD("ZONE_CHANGED_NEW_AREA")
+			chkSM()
+		end)
+		-- handle Garrison Heathstone into Town Hall
+		aObj.ae.RegisterEvent(aName, "ZONE_CHANGED", function()
+			-- printD("ZONE_CHANGED")
+			chkSM()
+		end)
+		chkSM()
+	end
+
+	-- Add another loot button and move them all up to fit if FramesResized isn't loaded
+	if not _G.IsAddOnLoaded("FramesResized") then
+		local yOfs, btn = -27
+		for i = 1, _G.LOOTFRAME_NUMBUTTONS do
+			btn = _G["LootButton" .. i]
+			btn:ClearAllPoints()
+			btn:SetPoint("TOPLEFT", 9, yOfs)
+			yOfs = yOfs - 41
+		end
+		_G.CreateFrame("Button", "LootButton5", _G.LootFrame, "LootButtonTemplate")
+		_G.LootButton5:SetPoint("TOPLEFT", 9, yOfs)
+		_G.LootButton5.id = 5
+		_G.LOOTFRAME_NUMBUTTONS = 5
+		yOfs = nil
+	end
+
+	aObj.ae.UnregisterEvent(aName, "PLAYER_LOGIN")
+
 end)
+
+-- track PLAYER_LOGOFF to turn off sound
+aObj.ae.RegisterEvent(aName, "PLAYER_LOGOFF", function(event, addon)
+	-- disable sound
+	SetCVar("Sound_EnableAllSound", 0)
+	_G.AudioOptionsFrame_AudioRestart()
+end)
+
+-- this is used to handle LoD addons
+local trackedAddonsSeen = {
+	["Blizzard_TradeSkillUI"] = false,
+	[aName] = false,
+	["Blizzard_PetJournal"] = false,
+	["Blizzard_FlightMap"] = false,
+}
+local allSeen = false
+aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(event, addon)
+	-- printD(event, addon)
+
+	-- -- Pet Battle functions
+	-- if addon == aName then
+	-- 	trackedAddonsSeen[addon] = true
+	-- 	if battle_pets then
+	-- 		-- PetBattle health check
+	-- 		aObj:checkPetHealth(nil, _G.GetTime())
+	-- 	end
+	-- end
+	--
+	-- filter sources to remove Promotion & Trading Card Game sources
+	if addon == "Blizzard_PetJournal" then
+		trackedAddonsSeen[addon] = true
+		_G.C_PetJournal.SetPetSourceFilter(8, false) -- Promotion
+		_G.C_PetJournal.SetPetSourceFilter(9, false) -- Trading Card Game
+		_G.UIDropDownMenu_Refresh(_G.PetJournalFilterDropDown, 2, 2)
+	end
+
+	if addon == "Blizzard_FlightMap" then
+		trackedAddonsSeen[addon] = true
+		_G.FlightMapFrame:SetScale(1.25)
+	end
+
+	for _, seen in pairs(trackedAddonsSeen) do
+		if not seen then allSeen = false end
+	end
+	if allSeen then
+		aObj.ae.UnregisterEvent(aName, "ADDON_LOADED")
+	end
+
+	if addon == "BugSack" then
+		-- enable BugSack Minimap icon
+		if _G.BugSack.healthCheck then
+			_G.BugSackLDBIconDB.hide = false
+			LibStub("LibDBIcon-1.0"):Show("BugSack")
+		end
+	end
+
+	if addon == "ChocolateBar" then
+		-- disable BugSack Minimap icon
+		if _G.BugSack.healthCheck then
+			_G.BugSackLDBIconDB.hide = true
+			LibStub("LibDBIcon-1.0"):Hide("BugSack")
+		end
+	end
+
+end)
+
+-- handle in Combat situations
+local inCombat = _G.InCombatLockdown()
+aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_DISABLED", function(...)
+	-- printD("PLAYER_REGEN_DISABLED")
+	-- _G.print("Miscellany - PLAYER_REGEN_DISABLED")
+	inCombat = true
+	_G.UIErrorsFrame:AddMessage("YOU ARE UNDER ATTACK.", 1, 0, 0)
+	SetCVar("nameplateShowEnemies", 1)
+	-- equip "Normal" set if a fishing pole is equipped
+	local mH = 	_G.GetInventoryItemLink("player", _G.GetInventorySlotInfo("MainHandSlot"))
+	if mH then
+		local itemType = select(7, _G.GetItemInfo(mH))
+		if itemType == "Fishing Poles"
+		and _G.GetNumEquipmentSets() > 0
+		then
+			_G.EquipmentManager_EquipSet(1) -- Normal set
+		end
+	end
+end)
+aObj.oocTab = {}
+aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_ENABLED", function(...)
+	-- printD("PLAYER_REGEN_ENABLED")
+	inCombat = false
+	_G.UIErrorsFrame:AddMessage("Finished fighting.", 1, 1, 0)
+	SetCVar("nameplateShowEnemies", 0)
+	for _, v in pairs(aObj.oocTab) do
+		v[1](_G.unpack(v[2]))
+	end
+	_G.wipe(aObj.oocTab)
+end)
+
+-- delete item from Bag if Alt+Right Clicked
+aObj.ah:SecureHook("ContainerFrameItemButton_OnModifiedClick", function(self, button)
+    if button == "RightButton"
+    and _G.IsAltKeyDown()
+    then
+        _G.PickupContainerItem(self:GetParent():GetID(), self:GetID())
+        _G.DeleteCursorItem()
+    end
+end)
+
+-- resize TaxiFrame
+_G.TaxiFrame:SetScale(1.5)
+
+-- AutoRepair by Ygrane
+-- Sell Junk by Tekkub
+aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(...)
+	-- repair gear using Guild funds if available
+	local gbMoney, repairAllCost, canRepair = _G.GetGuildBankMoney(), _G.GetRepairAllCost()
+	if canRepair then _G.RepairAllItems(repairAllCost <= gbMoney and _G.CanGuildBankRepair() or nil) end
+
+	-- Sell Junk, blatantly copied from tekJunkSeller
+	for bag = 0, 4 do
+		for slot = 0, _G.GetContainerNumSlots(bag) do
+			local link = _G.GetContainerItemLink(bag, slot)
+			if link
+			and select(3, _G.GetItemInfo(link)) == 0
+			then
+				-- wait a while to prevent 'that object is busy' message
+				_G.C_Timer.After(0.3, function() _G.UseContainerItem(bag, slot) end)
+			end
+		end
+	end
+end)
+
 -- Only show Available skills at trainer
-ae.RegisterEvent(aName, "TRAINER_SHOW", function(...)
-	SetTrainerServiceTypeFilter("unavailable", 0)
+aObj.ae.RegisterEvent(aName, "TRAINER_SHOW", function(...)
+	_G.SetTrainerServiceTypeFilter("unavailable", 0)
 end)
+
+local ToggleAllBags, CloseAllBags = _G.ToggleAllBags, _G.CloseAllBags
 -- Open/Close bags
-ae.RegisterEvent(aName, "BANKFRAME_OPENED", function(...)
-	OpenAllBags()
-	-- ToggleAllBags()
+aObj.ae.RegisterEvent(aName, "BANKFRAME_OPENED", function(...)
+	-- printD("BANKFRAME_OPENED")
+	ToggleAllBags()
 end)
-ae.RegisterEvent(aName, "BANKFRAME_CLOSED", function(...)
+aObj.ae.RegisterEvent(aName, "BANKFRAME_CLOSED", function(...)
+	-- printD("BANKFRAME_CLOSED")
 	CloseAllBags()
-	-- ToggleAllBags()
 end)
-ae.RegisterEvent(aName, "GUILDBANKFRAME_OPENED", function(...)
-	OpenAllBags()
-	-- ToggleAllBags()
+aObj.ae.RegisterEvent(aName, "GUILDBANKFRAME_OPENED", function(...)
+	-- printD("GUILDBANKFRAME_OPENED")
+	ToggleAllBags()
 end)
+aObj.ae.RegisterEvent(aName, "GUILDBANKFRAME_CLOSED", function(...)
+	-- printD("GUILDBANKFRAME_CLOSED")
+	CloseAllBags()
+end)
+
+local IsShiftKeyDown, UnitName, GetTitleText = _G.IsShiftKeyDown, _G.UnitName, _G.GetTitleText
+local AcceptQuest, IsQuestCompletable, CompleteQuest, GetNumQuestChoices = _G.AcceptQuest, _G.IsQuestCompletable, _G.CompleteQuest, _G.GetNumQuestChoices
+local GetGossipOptions, GetGossipAvailableQuests, GetGossipActiveQuests = _G.GetGossipOptions, _G.GetGossipAvailableQuests, _G.GetGossipActiveQuests
+local SelectGossipOption, SelectGossipAvailableQuest, SelectGossipActiveQuest = _G.SelectGossipOption, _G.SelectGossipAvailableQuest, _G.SelectGossipActiveQuest
 -- AutoGossip by Ygrane -- Select only dialogue option unless shift key held down
-ae.RegisterEvent(aName, "GOSSIP_SHOW", function(...)
+aObj.ae.RegisterEvent(aName, "GOSSIP_SHOW", function(...)
+	-- printD("GOSSIP_SHOW")
+
 	local o, p, q = GetGossipOptions()
+	-- printD("GetGossipOptions", o, p, q)
 	if o
 	and not (q or IsShiftKeyDown() or GetGossipAvailableQuests() or GetGossipActiveQuests() or p == "binder")
 	then
-		Msg{msg="GS-Auto"..p.."["..(UnitName("target") or "?").."]: "..o, show=false}
+		Msg{msg="GS-Auto"..p.."[" .. (UnitName("target") or "?") .. "]: " .. o, show=false}
 		SelectGossipOption(1)
 	end
+	-- Bodyguard dialog check
+	if o
+	and not IsShiftKeyDown()
+	and (o:find("head back to the barracks.") or q and q:find("head back to the barracks."))
+	then
+		_G.CloseGossip()
+	end
+	-- Rogue OrderHall access check
+	if o
+	and not IsShiftKeyDown()
+	and o:find("<Lay your insignia on the table.>")
+	then
+		SelectGossipOption(1)
+	end
+
 	local o, p,_,_,_, q = GetGossipAvailableQuests()
+	-- printD("GetGossipAvailableQuests", o, p, q)
 	if o
 	and not (q or IsShiftKeyDown() or GetGossipOptions() or GetGossipActiveQuests())
 	then
-		Msg{msg="GS-AutoNewQuest["..(UnitName("target") or "?").."]"..p..":"..o, show=false}
+		Msg{msg="GS-AutoNewQuest[" .. (UnitName("target") or "?") .. "]" .. p .. ":" .. o, show=false}
 		SelectGossipAvailableQuest(1)
 	end
+
 	local o, p,_,_, q = GetGossipActiveQuests()
+	-- printD("GetGossipActiveQuests", o, p, q)
 	if o
 	and not (q or IsShiftKeyDown() or GetGossipOptions() or GetGossipAvailableQuests())
 	then
-		Msg{msg="GS-AutoCompleteQuest["..(UnitName("target") or "?").."]"..p..":"..o, show=false}
+		Msg{msg="GS-AutoCompleteQuest[" .. (UnitName("target") or "?") .. "]" .. p .. ":" .. o, show=false}
 		SelectGossipActiveQuest(1)
 	end
+	-- -- Bodyguard additions
+	-- if not IsControlKeyDown() then
+	-- 	CheckForBodyGuard()
+	-- end
 end)
 -- Auto Accept Quest
-ae.RegisterEvent(aName, "QUEST_DETAIL", function(...)
+aObj.ae.RegisterEvent(aName, "QUEST_DETAIL", function(...)
+	-- printD("QUEST_DETAIL")
 	if not IsShiftKeyDown()	then
-		Msg{msg="AutoAcceptQuest["..(UnitName("target") or "?").."]: "..GetTitleText(), show=false}
+		Msg{msg="AutoAcceptQuest[" .. (UnitName("target") or "?") .. "]: " ..	GetTitleText(), show=false}
 		AcceptQuest()
 	end
 end)
+-- Auto Accept/Complete Multiple Quests
+aObj.ae.RegisterEvent(aName, "QUEST_GREETING", function(...)
+	-- printD("QUEST_GREETING", _G.GetNumAvailableQuests(), _G.GetNumActiveQuests())
+	local numActiveQuests = _G.GetNumActiveQuests()
+	local numAvailableQuests = _G.GetNumAvailableQuests()
+	-- Complete Quests
+	for i = 1, numActiveQuests do
+		local _, isComplete = _G.GetActiveTitle(i)
+		if isComplete
+		and not IsShiftKeyDown()
+		then
+			_G.QuestTitleButton_OnClick(_G["QuestTitleButton" .. i], button, down)
+		end
+	end
+	-- Accept Quests
+	for i = numActiveQuests + 1, numActiveQuests + numAvailableQuests do
+		if not IsShiftKeyDown()
+		then
+			_G.QuestTitleButton_OnClick(_G["QuestTitleButton" .. i], button, down)
+		end
+	end
+end)
 -- Auto Progress Quest
-ae.RegisterEvent(aName, "QUEST_PROGRESS", function(...)
+aObj.ae.RegisterEvent(aName, "QUEST_PROGRESS", function(...)
+	-- printD("QUEST_PROGRESS")
 	if IsQuestCompletable()
 	and not IsShiftKeyDown()
 	then
-		Msg("AutoProgressQuest["..(UnitName("target") or "?").."]: "..GetTitleText())
+		Msg("AutoProgressQuest[" .. (UnitName("target") or "?") .. "]: " .. GetTitleText())
 		CompleteQuest()
 	end
 end)
 -- Auto Complete Quest
-ae.RegisterEvent(aName, "QUEST_COMPLETE", function(...)
-	if GetNumQuestChoices() == 0
+aObj.ae.RegisterEvent(aName, "QUEST_COMPLETE", function(...)
+	-- printD("QUEST_COMPLETE", GetNumQuestChoices(), IsShiftKeyDown())
+	if GetNumQuestChoices() < 2
 	and not IsShiftKeyDown()
 	then
-		Msg("AutoCompleteQuest["..(UnitName("target") or "?").."]: "..GetTitleText())
-		QuestRewardCompleteButton_OnClick()
+		Msg("AutoCompleteQuest[" .. (UnitName("target") or "?") .. "]: " .. GetTitleText())
+		_G.QuestRewardCompleteButton_OnClick()
+		return
 	end
 end)
--- Toggle sound when equipping & unequipping 'Fishing' set
-ae.RegisterEvent(aName, "EQUIPMENT_SWAP_FINISHED", function(...)
-	local s = select(3, ...) == "Fishing" and 1 or 0
-	SetCVar("Sound_EnableAllSound", s)
-	if s == 0 then
-		AudioOptionsFrame_AudioRestart()
-		SetTracking(1, false) -- turn off fish tracking
-	end
-end)
-ae.RegisterEvent(aName, "UI_ERROR_MESSAGE", function(...)
-	if debug then print(select(1, ...), select(2, ...), IsFlying()) end
-	-- dismount if required and not currently in flight
-	if not IsFlying()
-	and select(2, ...) == SPELL_FAILED_NOT_MOUNTED
-	or select(2, ...) == ERR_TAXIPLAYERALREADYMOUNTED
+
+-- handle UI error messages when required
+aObj.ae.RegisterEvent(aName, "UI_ERROR_MESSAGE", function(event, ...)
+	-- printD(select(1, ...), select(2, ...))
+	-- dismount if required
+	if select(2, ...) == _G.SPELL_FAILED_NOT_MOUNTED
+	or select(2, ...) == _G.ERR_TAXIPLAYERALREADYMOUNTED
 	then
-		Dismount()
+		_G.Dismount()
 	end
 	-- handle no Guild Bank funds for repairs
-	if select(2, ...) == ERR_GUILD_WITHDRAW_LIMIT then
-		RepairAllItems()
+	if select(2, ...) == _G.ERR_GUILD_WITHDRAW_LIMIT then
+		_G.RepairAllItems()
+	end
+	-- handle not standing when summoning pet etc.
+	if select(2, ...) == _G.SPELL_FAILED_NOT_STANDING then
+		_G.DoEmote("Stand")
 	end
 end)
+
+-- Auto Accept Party Invites from known players
+aObj.ae.RegisterEvent(aName, "PARTY_INVITE_REQUEST", function(event, name)
+	-- printD("PARTY_INVITE_REQUEST", event, name)
+
+	if not name == "Stabbly" then return end
+
+	_G.AcceptGroup()
+	for i = 1, _G.STATICPOPUP_NUMDIALOGS do
+		local dlg = _G["StaticPopup"..i]
+		if dlg.which == "PARTY_INVITE" then
+			dlg.inviteAccepted = 1
+			break
+		end
+	end
+	_G.StaticPopup_Hide("PARTY_INVITE")
+
+end)
+
+-- set MaxLines for Debug chatframe
+_G.ChatFrame10:SetMaxLines(10000)
+
+-- turn on sound when CinematicFrame or MovieFrame shows
+local seas = GetCVar("Sound_EnableAllSound")
+local function enableSound()
+
+	SetCVar("Sound_EnableAllSound", 1)
+	SetCVar("Sound_EnableSFX", 0)
+	_G.Sound_ToggleSound()
+
+end
+local function disableSound()
+
+	SetCVar("Sound_EnableAllSound", seas)
+	_G.Sound_ToggleSound()
+
+end
+aObj.ae.RegisterEvent(aName, "CINEMATIC_START", function(event, ...)
+
+	enableSound()
+
+end)
+aObj.ae.RegisterEvent(aName, "CINEMATIC_STOP", function(event, ...)
+
+	disableSound()
+
+end)
+local mst = GetCVarBool("movieSubtitle")
+aObj.ae.RegisterEvent(aName, "PLAY_MOVIE", function(event, ...)
+
+	enableSound()
+
+	if not GetCVarBool("movieSubtitle") then
+		SetCVar("movieSubtitle", 1)
+		_G.MovieFrame:EnableSubtitles(GetCVarBool("movieSubtitle"))
+	end
+
+end)
+aObj.ah:SecureHook("GameMovieFinished", function()
+
+	disableSound()
+
+	if GetCVarBool("movieSubtitle")
+	and GetCVarBool("movieSubtitle") ~= mst
+	then
+		SetCVar("movieSubtitle", mst)
+		_G.MovieFrame:EnableSubtitles(mst)
+	end
+
+end)
+
+function aObj:checkLTQ(questID)
+	if _G.IsQuestFlaggedCompleted(questID) then
+		-- print("LegionTreasure quest complete:", questID)
+	else
+		print("LegionTreasure quest incomplete:", questID)
+	end
+end
+
+function aObj:checkLTQHighmountain()
+
+	for _, q in pairs{39466,39494,39503,39531,39606,39766,39824,40471,40472,40473,40474,40475,40476,40477,40478,40479,40480,40481,40482,40483,40484,40487,40488,40489,40491,40493,40494,40496,40497,40498,40499,40500,40505,40506,40507,40508,40509,40510,42453,44279,44352,39507,44280} do
+	-- for _, q in pairs{39507,44280} do
+		aObj:checkLTQ(q)
+	end
+end
+
+local ChocolateBar
+function aObj:cbJostle()
+
+	if _G.IsAddOnLoaded("ChocolateBar") then
+		ChocolateBar = LibStub("AceAddon-3.0"):GetAddon("ChocolateBar", true)
+		if ChocolateBar then
+			ChocolateBar:UpdateJostle()
+			ChocolateBar = nil
+		end
+	end
+
+end

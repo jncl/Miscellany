@@ -1,15 +1,24 @@
-## Interface: 40300
+## Interface: 70300
 ## Title: Miscellany
 ## Author: Jncl
 ## Version: 1.0
 ## Notes: A collection of functions to change the UI etc
+## SavedVariablesPerCharacter: battle_pets, mhWeapon, ohWeapon, helmet
 
 # LibStub & Callback Handler
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-#Ace3 Libraries
+
+# Ace3 Libraries
 libs\AceEvent-3.0\AceEvent-3.0.xml
 libs\AceHook-3.0\AceHook-3.0.xml
 libs\AceTimer-3.0\AceTimer-3.0.xml
-#Main file
+
+# Main file
 Miscellany.lua
+
+# Modules
+modules/fishing.lua
+modules/mop_treasure.lua
+modules/pet_battles.lua
+modules/rogue.lua

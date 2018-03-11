@@ -104,7 +104,7 @@ function SlashCmdList.MISC(msg, editbox)
 		_G.SetCVar("autoQuestWatch", 1)
 		_G.ReloadUI()
 	elseif msg == "atq_off" then
-		_G.SetCVar("autoQuestWatch", 0r)
+		_G.SetCVar("autoQuestWatch", 0)
 		_G.ReloadUI()
 	end
 	-- printD("slash command:", msg, editbox)
@@ -503,8 +503,10 @@ end)
 _G.ChatFrame10:SetMaxLines(10000)
 
 -- turn on sound when CinematicFrame or MovieFrame shows
-local seas = GetCVar("Sound_EnableAllSound")
+local seas
 local function enableSound()
+
+	seas = GetCVar("Sound_EnableAllSound")
 
 	SetCVar("Sound_EnableAllSound", 1)
 	SetCVar("Sound_EnableSFX", 0)
@@ -517,19 +519,46 @@ local function disableSound()
 	_G.Sound_ToggleSound()
 
 end
+local cbs, cbp
+local function enableChatBubbles()
+
+	-- print("Misc enableChatBubbles#1:", GetCVar("chatBubbles"), GetCVar("chatBubblesParty"))
+
+	cbs = GetCVar("chatBubbles")
+	cbp = GetCVar("chatBubblesParty")
+
+	SetCVar("chatBubbles", 1)
+	SetCVar("chatBubblesParty", 1)
+
+	-- print("Misc enableChatBubbles#2:", GetCVar("chatBubbles"), GetCVar("chatBubblesParty"))
+
+end
+local function disableChatBubbles()
+
+	-- print("Misc disableChatBubbles#1:", GetCVar("chatBubbles"), GetCVar("chatBubblesParty"))
+
+	SetCVar("chatBubbles", cbs)
+	SetCVar("chatBubblesParty", cbp)
+
+	-- print("Misc disableChatBubbles#2:", GetCVar("chatBubbles"), GetCVar("chatBubblesParty"))
+
+end
 aObj.ae.RegisterEvent(aName, "CINEMATIC_START", function(event, ...)
 
+	enableChatBubbles()
 	enableSound()
 
 end)
 aObj.ae.RegisterEvent(aName, "CINEMATIC_STOP", function(event, ...)
 
+	disableChatBubbles()
 	disableSound()
 
 end)
 local mst = GetCVarBool("movieSubtitle")
 aObj.ae.RegisterEvent(aName, "PLAY_MOVIE", function(event, ...)
 
+	enableChatBubbles()
 	enableSound()
 
 	if not GetCVarBool("movieSubtitle") then
@@ -540,6 +569,7 @@ aObj.ae.RegisterEvent(aName, "PLAY_MOVIE", function(event, ...)
 end)
 aObj.ah:SecureHook("GameMovieFinished", function()
 
+	disableChatBubbles()
 	disableSound()
 
 	if GetCVarBool("movieSubtitle")

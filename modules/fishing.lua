@@ -80,8 +80,10 @@ local function chkWeapons(mhItem)
 	-- check to see if fishing rod already equipped
 	if not fishingPoles[mhItem] then
 		-- get current Weapon(s)
-		mhWeapon = mhItem
-		ohWeapon = _G.OffhandHasWeapon() and GetInventoryItemID("player", ohSlotId) or nil
+		mhWeapon, ohWeapon = mhItem
+		if not aObj.isBeta then
+			ohWeapon = _G.OffhandHasWeapon() and GetInventoryItemID("player", ohSlotId) or nil
+		end
 		printD("current weapons:", mhWeapon, ohWeapon)
 		fpEquipped = false
 	else

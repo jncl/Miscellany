@@ -1,4 +1,4 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: Miscellany
 ## Author: Jncl
 ## Version: 1.0
@@ -22,3 +22,4 @@ modules/fishing.lua
 modules/mop_treasure.lua
 modules/pet_battles.lua
 modules/rogue.lua
+modules/jostle.lua

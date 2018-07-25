@@ -23,8 +23,21 @@ aObj.ah = LibStub("AceHook-3.0")
 aObj.at = LibStub("AceTimer-3.0")
 aObj.ae = LibStub("AceEvent-3.0")
 
-local buildInfo = {_G.GetBuildInfo()}
-local portal = _G.GetCVar("portal") or nil
+local betaInfo = {"8.0.1", 27165}
+local ptrInfo = {"8.0.1", 27165}
+
+local buildInfo, portal = {_G.GetBuildInfo()}, _G.GetCVar("portal") or nil
+
+aObj.isBeta = aObj.isBeta or buildInfo[1] == betaInfo[1] and _G.tonumber(buildInfo[2]) == betaInfo[2] and true or false
+aObj.isPTR = aObj.isPTR or buildInfo[1] == ptrInfo[1] and _G.tonumber(buildInfo[2]) == ptrInfo[2] and true or false
+if aObj.isBeta then
+	aObj.isPTR = false
+end
+if aObj.isPTR then
+	_G.DEFAULT_CHAT_FRAME:AddMessage(aName .. " - Version No. updated, any PTR changes to be applied?", 1, 0, 0, nil, true)
+	aObj.isBeta = true
+end
+ptrInfo, betaInfo, buildInfo, portal = nil, nil, nil, nil
 
 local uCls = select(2, _G.UnitClass("player"))
 
@@ -47,6 +60,8 @@ local chickenQuests = {
 _G.SLASH_MISC1 = '/misc'
 local qTab, qType, loud = {}, nil, false
 function SlashCmdList.MISC(msg, editbox)
+
+	local cmds = { (" "):split(msg) }
 
 	-- get Completed quest info
 	if msg == "chicken"
@@ -91,7 +106,7 @@ function SlashCmdList.MISC(msg, editbox)
 	elseif msg == "lth" then aObj:checkLTQHighmountain()
 	elseif msg == "ltq" then aObj:checkLTQ(msg)
 	-- Jostle
-	elseif msg == "cbj" then aObj:cbJostle()
+	elseif msg == "cbj" then aObj:cbJostle(cmds[2])
 		-- EquipmentSet info
 	elseif msg == "esi" then
 		local esNum = _G.C_EquipmentSet.GetNumEquipmentSets()
@@ -203,16 +218,8 @@ aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(event, addon)
 
 end)
 
--- track PLAYER_LOGOFF to turn off sound
-aObj.ae.RegisterEvent(aName, "PLAYER_LOGOFF", function(event, addon)
-	-- disable sound
-	SetCVar("Sound_EnableAllSound", 0)
-	_G.AudioOptionsFrame_AudioRestart()
-end)
-
 -- this is used to handle LoD addons
 local trackedAddonsSeen = {
-	["Blizzard_TradeSkillUI"] = false,
 	[aName] = false,
 	["Blizzard_PetJournal"] = false,
 	["Blizzard_FlightMap"] = false,
@@ -230,6 +237,7 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(event, addon)
 	-- 	end
 	-- end
 	--
+
 	-- filter sources to remove Promotion & Trading Card Game sources
 	if addon == "Blizzard_PetJournal" then
 		trackedAddonsSeen[addon] = true
@@ -250,21 +258,23 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(event, addon)
 		aObj.ae.UnregisterEvent(aName, "ADDON_LOADED")
 	end
 
-	if addon == "BugSack" then
-		-- enable BugSack Minimap icon
-		if _G.BugSack.healthCheck then
-			_G.BugSackLDBIconDB.hide = false
-			LibStub("LibDBIcon-1.0"):Show("BugSack")
-		end
-	end
-
-	if addon == "ChocolateBar" then
-		-- disable BugSack Minimap icon
-		if _G.BugSack.healthCheck then
-			_G.BugSackLDBIconDB.hide = true
-			LibStub("LibDBIcon-1.0"):Hide("BugSack")
-		end
-	end
+	-- if addon == aName then
+	-- 	if _G.IsAddOnLoaded("BugSack") then
+	-- 		-- enable BugSack Minimap icon
+	-- 		if LibStub("LibDBIcon-1.0"):IsRegistered("BugSack") then
+	-- 			_G.BugSackLDBIconDB.hide = false
+	-- 			LibStub("LibDBIcon-1.0"):Show("BugSack")
+	-- 		end
+	-- 	end
+	--
+	-- 	if _G.IsAddOnLoaded("ChocolateBar") then
+	-- 		-- disable BugSack Minimap icon
+	-- 		if LibStub("LibDBIcon-1.0"):IsRegistered("BugSack") then
+	-- 			_G.BugSackLDBIconDB.hide = true
+	-- 			LibStub("LibDBIcon-1.0"):Hide("BugSack")
+	-- 		end
+	-- 	end
+	-- end
 
 end)
 
@@ -319,18 +329,26 @@ aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(...)
 	local gbMoney, repairAllCost, canRepair = _G.GetGuildBankMoney(), _G.GetRepairAllCost()
 	if canRepair then _G.RepairAllItems(repairAllCost <= gbMoney and _G.CanGuildBankRepair() or nil) end
 
-	-- Sell Junk, blatantly copied from tekJunkSeller
+	-- Sell Junk, blatantly copied from SellJunk
 	for bag = 0, 4 do
-		for slot = 0, _G.GetContainerNumSlots(bag) do
+		for slot = 1, _G.GetContainerNumSlots(bag) do
 			local link = _G.GetContainerItemLink(bag, slot)
-			if link
-			and select(3, _G.GetItemInfo(link)) == 0
-			then
-				-- wait a while to prevent 'that object is busy' message
-				_G.C_Timer.After(0.3, function() _G.UseContainerItem(bag, slot) end)
-			end
-		end
-	end
+			if link then
+				grey = select(3, _G.GetItemInfo(link)) == 0 and true or false
+				if grey then
+					 currPrice = select(11, _G.GetItemInfo(link))
+					 _G.PickupContainerItem(bag, slot)
+					 -- ignore unsellable grey items
+					 if currPrice > 0 then
+						 _G.PickupMerchantItem()
+					 else
+						 _G.DeleteCursorItem()
+					 end
+				 end
+			 end
+		 end
+	 end
+
 end)
 
 -- Only show Available skills at trainer
@@ -340,20 +358,16 @@ end)
 
 local ToggleAllBags, CloseAllBags = _G.ToggleAllBags, _G.CloseAllBags
 -- Open/Close bags
-aObj.ae.RegisterEvent(aName, "BANKFRAME_OPENED", function(...)
-	-- printD("BANKFRAME_OPENED")
-	ToggleAllBags()
-end)
-aObj.ae.RegisterEvent(aName, "BANKFRAME_CLOSED", function(...)
-	-- printD("BANKFRAME_CLOSED")
-	CloseAllBags()
-end)
 aObj.ae.RegisterEvent(aName, "GUILDBANKFRAME_OPENED", function(...)
-	-- printD("GUILDBANKFRAME_OPENED")
 	ToggleAllBags()
 end)
 aObj.ae.RegisterEvent(aName, "GUILDBANKFRAME_CLOSED", function(...)
-	-- printD("GUILDBANKFRAME_CLOSED")
+	CloseAllBags()
+end)
+aObj.ae.RegisterEvent(aName, "SCRAPPING_MACHINE_SHOW", function(...)
+	ToggleAllBags()
+end)
+aObj.ae.RegisterEvent(aName, "SCRAPPING_MACHINE_CLOSE", function(...)
 	CloseAllBags()
 end)
 
@@ -499,9 +513,6 @@ aObj.ae.RegisterEvent(aName, "PARTY_INVITE_REQUEST", function(event, name)
 
 end)
 
--- set MaxLines for Debug chatframe
-_G.ChatFrame10:SetMaxLines(10000)
-
 -- turn on sound when CinematicFrame or MovieFrame shows
 local seas
 local function enableSound()
@@ -530,7 +541,7 @@ local function enableChatBubbles()
 	SetCVar("chatBubbles", 1)
 	SetCVar("chatBubblesParty", 1)
 
-	-- print("Misc enableChatBubbles#2:", GetCVar("chatBubbles"), GetCVar("chatBubblesParty"))
+	print("Misc enableChatBubbles#2:", GetCVar("chatBubbles"), GetCVar("chatBubblesParty"))
 
 end
 local function disableChatBubbles()
@@ -540,7 +551,7 @@ local function disableChatBubbles()
 	SetCVar("chatBubbles", cbs)
 	SetCVar("chatBubblesParty", cbp)
 
-	-- print("Misc disableChatBubbles#2:", GetCVar("chatBubbles"), GetCVar("chatBubblesParty"))
+	print("Misc disableChatBubbles#2:", GetCVar("chatBubbles"), GetCVar("chatBubblesParty"))
 
 end
 aObj.ae.RegisterEvent(aName, "CINEMATIC_START", function(event, ...)
@@ -597,15 +608,11 @@ function aObj:checkLTQHighmountain()
 	end
 end
 
-local ChocolateBar
-function aObj:cbJostle()
+-- local ChocolateBar
+function aObj:cbJostle(offset)
 
 	if _G.IsAddOnLoaded("ChocolateBar") then
-		ChocolateBar = LibStub("AceAddon-3.0"):GetAddon("ChocolateBar", true)
-		if ChocolateBar then
-			ChocolateBar:UpdateJostle()
-			ChocolateBar = nil
-		end
+		self:moveThem(offset)
 	end
 
 end

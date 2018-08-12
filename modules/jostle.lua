@@ -21,6 +21,11 @@ local framesToMove = {
 
 function aObj:moveThem(offset)
 
+	if _G.InCombatLockdown() then
+		aObj.oocTab[#aObj.oocTab + 1] = {self.moveThem, {offset}}
+		return
+	end
+	
 	local offset = offset or 22
 
 	local topOffset, buffsAreaTopOffset = 0, 0
@@ -76,6 +81,13 @@ end)
 
 -- Hook Vehicle Event as Player Frame moves
 aObj.ae.RegisterEvent(aName, "UNIT_ENTERED_VEHICLE", function(event, ...)
+	if _G.select(1, ...) == "player" then
+		_G.C_Timer.After(1.5, function()
+			aObj:moveThem()
+		end)
+	end
+end)
+aObj.ae.RegisterEvent(aName, "UNIT_EXITED_VEHICLE", function(event, ...)
 	if _G.select(1, ...) == "player" then
 		_G.C_Timer.After(1.5, function()
 			aObj:moveThem()

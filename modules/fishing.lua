@@ -81,9 +81,6 @@ local function chkWeapons(mhItem)
 	if not fishingPoles[mhItem] then
 		-- get current Weapon(s)
 		mhWeapon, ohWeapon = mhItem
-		if not aObj.isBeta then
-			ohWeapon = _G.OffhandHasWeapon() and GetInventoryItemID("player", ohSlotId) or nil
-		end
 		printD("current weapons:", mhWeapon, ohWeapon)
 		fpEquipped = false
 	else

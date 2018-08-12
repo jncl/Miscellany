@@ -52,24 +52,28 @@ if select(2, _G.UnitClass("player")) == "ROGUE" then
 		end
 	end)
 
-	-- check for Blade Flurry buff
-	bfEvt = nil
-	function check_for_bf()
-		aObj.at.CancelTimer(aName .. "-rogue", bfEvt, true)
-		bfEvt = nil
-		if _G.UnitBuff("player", "Blade Flurry") then
-			_G.UIErrorsFrame:AddMessage("Disable Blade Flurry", 1.0, 0.0, 0.0, nil, 5)
-			bfEvt = aObj.at.ScheduleRepeatingTimer(aName .. "-rogue", check_for_bf, 5)
-		end
-	end
-	check_for_bf()
-	-- hook these to enable/disable the timer
-	aObj.ae.RegisterEvent(aName .. "-rogue", "PLAYER_REGEN_DISABLED", function(...)
-		check_for_bf()
-	end)
-	aObj.ae.RegisterEvent(aName .. "-rogue", "PLAYER_REGEN_ENABLED", function(...)
-		check_for_bf()
-	end)
+	-- -- check for Blade Flurry buff
+	-- bfEvt = nil
+	-- function check_for_bf()
+	-- 	aObj.at.CancelTimer(aName .. "-rogue", bfEvt, true)
+	-- 	bfEvt = nil
+	-- 	for i = 1, 40 do
+	-- 		printD("UnitBuff", i, _G.UnitBuff("player", i))
+	-- 		if _G.UnitBuff("player", i) == "Blade Flurry" then
+	-- 			_G.UIErrorsFrame:AddMessage("Disable Blade Flurry", 1.0, 0.0, 0.0, nil, 5)
+	-- 			bfEvt = aObj.at.ScheduleRepeatingTimer(aName .. "-rogue", check_for_bf, 5)
+	-- 			break
+	-- 		end
+	-- 	end
+	-- end
+	-- check_for_bf()
+	-- -- hook these to enable/disable the timer
+	-- aObj.ae.RegisterEvent(aName .. "-rogue", "PLAYER_REGEN_DISABLED", function(...)
+	-- 	check_for_bf()
+	-- end)
+	-- aObj.ae.RegisterEvent(aName .. "-rogue", "PLAYER_REGEN_ENABLED", function(...)
+	-- 	check_for_bf()
+	-- end)
 
 	-- Pickpocketing bits for AutoBag
 	-- local ppItems = {

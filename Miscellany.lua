@@ -23,8 +23,8 @@ aObj.ah = LibStub("AceHook-3.0")
 aObj.at = LibStub("AceTimer-3.0")
 aObj.ae = LibStub("AceEvent-3.0")
 
-local betaInfo = {"8.0.1", 27165}
-local ptrInfo = {"8.0.1", 27165}
+local betaInfo = {"8.0.1", 27326}
+local ptrInfo = {"8.0.1", 27326}
 
 local buildInfo, portal = {_G.GetBuildInfo()}, _G.GetCVar("portal") or nil
 
@@ -121,6 +121,12 @@ function SlashCmdList.MISC(msg, editbox)
 	elseif msg == "atq_off" then
 		_G.SetCVar("autoQuestWatch", 0)
 		_G.ReloadUI()
+	elseif cmds[1] == "clrs" then
+		printD("showing RAID_CLASS_COLORS")
+		for k, v in pairs(_G.RAID_CLASS_COLORS) do
+			v["name"] = k
+			_G.Spew("RCC", v)
+		end
 	end
 	-- printD("slash command:", msg, editbox)
 
@@ -358,10 +364,23 @@ end)
 
 local ToggleAllBags, CloseAllBags = _G.ToggleAllBags, _G.CloseAllBags
 -- Open/Close bags
+aObj.ae.RegisterEvent(aName, "BANKFRAME_OPENED", function(...)
+	ToggleAllBags() -- N.B. DOESN'T work here (Beta)
+	OpenAllBags()
+end)
+aObj.ae.RegisterEvent(aName, "BANKFRAME_CLOSED", function(...)
+	CloseAllBags()
+end)
 aObj.ae.RegisterEvent(aName, "GUILDBANKFRAME_OPENED", function(...)
 	ToggleAllBags()
 end)
 aObj.ae.RegisterEvent(aName, "GUILDBANKFRAME_CLOSED", function(...)
+	CloseAllBags()
+end)
+aObj.ae.RegisterEvent(aName, "OBLITERUM_FORGE_SHOW", function(...)
+	ToggleAllBags()
+end)
+aObj.ae.RegisterEvent(aName, "OBLITERUM_FORGE_CLOSE", function(...)
 	CloseAllBags()
 end)
 aObj.ae.RegisterEvent(aName, "SCRAPPING_MACHINE_SHOW", function(...)

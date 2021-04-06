@@ -1,0 +1,33 @@
+local aName, aObj = ...
+local _G = _G
+
+-- handle in Combat situations
+local inCombat = _G.InCombatLockdown()
+aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_DISABLED", function(...)
+	-- printD("PLAYER_REGEN_DISABLED")
+	-- _G.print("Miscellany - PLAYER_REGEN_DISABLED")
+	inCombat = true
+	_G.UIErrorsFrame:AddMessage("YOU ARE UNDER ATTACK.", 1, 0, 0)
+	_G.SetCVar("nameplateShowEnemies", 1)
+	-- equip "Normal" set if a fishing pole is equipped
+	local mH = 	_G.GetInventoryItemLink("player", _G.GetInventorySlotInfo("MainHandSlot"))
+	if mH then
+		local itemType = _G.select(7, _G.GetItemInfo(mH))
+		if itemType == "Fishing Poles"
+		and _G.GetNumEquipmentSets() > 0
+		then
+			_G.EquipmentManager_EquipSet(1) -- Normal set
+		end
+	end
+end)
+
+aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_ENABLED", function(...)
+	-- printD("PLAYER_REGEN_ENABLED")
+	inCombat = false
+	_G.UIErrorsFrame:AddMessage("Finished fighting.", 1, 1, 0)
+	_G.SetCVar("nameplateShowEnemies", 0)
+	for _, v in _G.pairs(aObj.oocTab) do
+		v[1](_G.unpack(v[2]))
+	end
+	_G.wipe(aObj.oocTab)
+end)

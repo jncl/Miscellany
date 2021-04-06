@@ -1,12 +1,7 @@
 local aName, aObj = ...
 local _G = _G
 
-local function printD(...)
-	if not aObj.debug then return end
-	print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
-end
-
-local IsQuestFlaggedCompleted, SlashCmdList = _G.IsQuestFlaggedCompleted, _G.SlashCmdList
+local IsQuestFlaggedCompleted, SlashCmdList, print, pairs, stringf = _G.IsQuestFlaggedCompleted, _G.SlashCmdList, _G.print, _G.pairs, _G.stringf
 
 -- Timeless Isle Chests
 function aObj:timelessIsleChests()
@@ -18,7 +13,7 @@ function aObj:timelessIsleChests()
 		local todo = false
 		for k, info in pairs(tab) do
 			if not IsQuestFlaggedCompleted(info["questID"]) then
-				printD(stringf("%s %s %s", "Timeless Isle", info["coords"], k))
+				aObj:printD(stringf("%s %s %s", "Timeless Isle", info["coords"], k))
 				SlashCmdList.TOMTOM_WAY(stringf("%s %s %s", "Timeless Isle", info["coords"], k))
 				todo = true
 			end
@@ -94,7 +89,7 @@ function aObj:isleOfThunderChests()
 
 		for k, info in pairs(tab) do
 			if not IsQuestFlaggedCompleted(info["questID"]) then
-				printD(stringf("%s %s %s", "Timeless Isle", info["coords"], k))
+				aObj:printD(stringf("%s %s %s", "Timeless Isle", info["coords"], k))
 				SlashCmdList.TOMTOM_WAY(stringf("%s %s %s", "Isle of Thunder", info["coords"], k))
 			else
 				print("All Weekly Isle of Thunder Chests have been found")

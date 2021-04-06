@@ -1,28 +1,13 @@
-## Interface: 80100
+## Interface: 90005
 ## Title: Miscellany
 ## Author: Jncl
 ## Version: 1.0
 ## Notes: A collection of functions to change the UI etc
-## SavedVariablesPerCharacter: battle_pets, mhWeapon, ohWeapon, helmet
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## SavedVariablesPerCharacter: battle_pets, mhWeapon, ohWeapon, helmet, autoquests
 
-# LibStub & Callback Handler
-libs\LibStub\LibStub.lua
-libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-
-#@no-lib-strip@
-# Ace3 Libraries
-# libs\AceEvent-3.0\AceEvent-3.0.xml
-# libs\AceHook-3.0\AceHook-3.0.xml
-# libs\AceTimer-3.0\AceTimer-3.0.xml
-#@end-no-lib-strip@
-
-# Main file
+Libs\_RequiredLibs.xml
+Libs\_OptionalLibs.xml
 Miscellany.lua
-
-# Modules
-modules/fishing.lua
-modules/mop_treasure.lua
-modules/pet_battles.lua
-modules/rogue.lua
-modules/jostle.lua
-modules/hunter.lua
+modules/_modules.xml

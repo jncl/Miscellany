@@ -1,16 +1,30 @@
 local aName, aObj = ...
 local _G = _G
 
-local function printD(...)
-	if not aObj.debug then return end
-	print(("%s [%s.%03d]"):format(aName .. "-rogue", _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
-end
+if _G.UnitClass("player") ~= "ROGUE" then return end
 
-if select(2, _G.UnitClass("player")) == "ROGUE" then
+-- hide StanceBar Frame
+_G.StanceBarFrame:Hide()
 
-	-- hide StanceBar Frame
-	_G.StanceBarFrame:Hide()
+if aObj.isClsc then
+	-- get dagger from bag
+	-- get current MH
 
+	-- aObj.ae.RegisterEvent(aName .. "-rogue", "UPDATE_SHAPESHIFT_FORM", function ()
+	-- 	local name, active
+	-- 	for i = 1, _G.GetNumShapeshiftForms() do
+	-- 		local _, name, active = _G.GetShapeshiftFormInfo(i)
+	-- 		if active then
+	-- 			shifted = true
+	-- 			-- equip dagger
+	-- 			return
+	-- 		end
+	-- 	end
+	-- 	shifted = false
+	-- 	 -- re-equip MH
+	-- end)
+
+else
 	aObj.ae.RegisterEvent(aName .. "-rogue", "PLAYER_LOGIN", function(event, addon)
 		local equipmentSetID = _G.C_EquipmentSet.GetEquipmentSetID("Stealth")
 		-- change EquipmentSet when stealthed, based upon EventEquip function
@@ -19,7 +33,7 @@ if select(2, _G.UnitClass("player")) == "ROGUE" then
 		-- and _G.GetEquipmentSetInfoByName("Stealth")
 		then
 			local function checkAndEquip(eSet)
-				local sTime, eTime = select(5, _G.UnitCastingInfo("player"))
+				local sTime, eTime = _G.select(5, _G.UnitCastingInfo("player"))
 				if eTime then -- casting in progress, equip after cast has finished, otherwise error and not equipped
 					aObj.at.ScheduleTimer(function(eSet)
 						_G.EquipmentManager_EquipSet(eSet)
@@ -28,7 +42,7 @@ if select(2, _G.UnitClass("player")) == "ROGUE" then
 					_G.EquipmentManager_EquipSet(eSet)
 				end
 			end
-			printD(aName, "- Rogue's Stealth EquipmentSet detected")
+			aObj:printD(aName, "- Rogue's Stealth EquipmentSet detected")
 			local curSet, shifted = "Normal", false
 			aObj.ah.SecureHook(aName .. "-rogue", "UseEquipmentSet", function(setName)
 				if not shifted then curSet = setName end
@@ -58,7 +72,7 @@ if select(2, _G.UnitClass("player")) == "ROGUE" then
 	-- 	aObj.at.CancelTimer(aName .. "-rogue", bfEvt, true)
 	-- 	bfEvt = nil
 	-- 	for i = 1, 40 do
-	-- 		printD("UnitBuff", i, _G.UnitBuff("player", i))
+	-- 		aObj:printD("UnitBuff", i, _G.UnitBuff("player", i))
 	-- 		if _G.UnitBuff("player", i) == "Blade Flurry" then
 	-- 			_G.UIErrorsFrame:AddMessage("Disable Blade Flurry", 1.0, 0.0, 0.0, nil, 5)
 	-- 			bfEvt = aObj.at.ScheduleRepeatingTimer(aName .. "-rogue", check_for_bf, 5)
@@ -134,7 +148,7 @@ if select(2, _G.UnitClass("player")) == "ROGUE" then
 				-- end
 
 				-- check for pickpocketing items and move them
-				local ppt = select(12, scantt:GetRegions())
+				local ppt = _G.select(12, scantt:GetRegions())
 				if ppt
 				and ppt:GetObjectType() == "FontString"
 				and ppt:GetText()

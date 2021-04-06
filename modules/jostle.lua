@@ -25,7 +25,7 @@ function aObj:moveThem(offset)
 		aObj.oocTab[#aObj.oocTab + 1] = {self.moveThem, {offset}}
 		return
 	end
-	
+
 	local offset = offset or 22
 
 	local topOffset, buffsAreaTopOffset = 0, 0
@@ -46,7 +46,8 @@ function aObj:moveThem(offset)
 	framesToMove["BuffFrame"].yOfs = _G.Round(buffsAreaTopOffset) * -1
 	-- printD("moveThem: [offsets]", offset, topOffset, _G.Round(buffsAreaTopOffset))
 
-	for frame in pairs(framesToMove) do
+	local fObj
+	for frame in _G.pairs(framesToMove) do
 		if framesToMove[frame]
 		and framesToMove[frame].move
 		then
@@ -71,26 +72,37 @@ function aObj:moveThem(offset)
 			end
 		end
 	end
+	fObj = nil
 
 end
 
-aObj.ah:SecureHook("UIParent_UpdateTopFramePositions", function()
-	-- printD("UIParent_UpdateTopFramePositions")
-	aObj:moveThem()
-end)
+if not aObj.isClsc then
+	aObj.ah:SecureHook("UIParent_UpdateTopFramePositions", function()
+		-- printD("UIParent_UpdateTopFramePositions")
+		aObj:moveThem()
+	end)
 
--- Hook Vehicle Event as Player Frame moves
-aObj.ae.RegisterEvent(aName, "UNIT_ENTERED_VEHICLE", function(event, ...)
-	if _G.select(1, ...) == "player" then
-		_G.C_Timer.After(1.5, function()
-			aObj:moveThem()
-		end)
+	-- Hook Vehicle Event as Player Frame moves
+	aObj.ae.RegisterEvent(aName, "UNIT_ENTERED_VEHICLE", function(event, ...)
+		if _G.select(1, ...) == "player" then
+			_G.C_Timer.After(1.5, function()
+				aObj:moveThem()
+			end)
+		end
+	end)
+	aObj.ae.RegisterEvent(aName, "UNIT_EXITED_VEHICLE", function(event, ...)
+		if _G.select(1, ...) == "player" then
+			_G.C_Timer.After(1.5, function()
+				aObj:moveThem()
+			end)
+		end
+	end)
+end
+
+function aObj:cbJostle(offset)
+
+	if _G.IsAddOnLoaded("ChocolateBar") then
+		self:moveThem(offset)
 	end
-end)
-aObj.ae.RegisterEvent(aName, "UNIT_EXITED_VEHICLE", function(event, ...)
-	if _G.select(1, ...) == "player" then
-		_G.C_Timer.After(1.5, function()
-			aObj:moveThem()
-		end)
-	end
-end)
+
+end

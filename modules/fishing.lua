@@ -4,25 +4,18 @@ local _G = _G
 local pairs, ipairs, select = _G.pairs, _G.ipairs, _G.select
 local GetInventorySlotInfo, GetInventoryItemID, EquipItemByName, GetItemInfo = _G.GetInventorySlotInfo, _G.GetInventoryItemID, _G.EquipItemByName, _G.GetItemInfo
 local GetCVarBool, SetCVar = _G.GetCVarBool, _G.SetCVar
--- SV's
-local mhWeapon, ohWeapon, helmet = _G.mhWeapon, _G.ohWeapon, _G.helmet
-
-local debug = false
-local function printD(...)
-	if not debug then return end
-	_G.print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
-end
 
 -- Fishing Macros
 local fishingPoles = {
-	-- [6256]  = true,
-	-- [12225] = true, -- Blump Family Family Pole
+	[6256]  = true,
+	[12225] = true, -- Blump Family Family Pole
+	[180135] = true, -- The Broken Angle'r [Shadowlands]
 	-- [46337] = true,
 	-- [84660] = true,
 	-- [116825] = true,
 	-- [116826] = true,
 	-- [118381] = true, -- Ephemeral Fishing Pole (duration 1 day)
-	[133755] = true, -- Underlight Angler
+	-- [133755] = true, -- Underlight Angler
 }
 -- local exclFishingPoles = {
 -- 	[6365]  = 10, -- Strong Fishing	Pole
@@ -45,19 +38,21 @@ local fishingHats = {
 	[118380] = true, -- Highfish Cap (+100 Fishing) (7 days duration)
 	[118393] = true, -- Tentacled Hat (+100 Fishing) (5 days duration)
 }
--- get fishing profession index
-local fishingIdx, skillLevel = (select(4, _G.GetProfessions())), 0
-printD("Fishing Profession index", fishingIdx)
-
-local mhSlotId, ohSlotId, hSlotId = (GetInventorySlotInfo("MainHandSlot")), (GetInventorySlotInfo("SecondaryHandSlot")), (GetInventorySlotInfo("HeadSlot"))
-printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
-
-local function getSkillLvl()
-	if fishingIdx then
-		name, _, skillLevel = _G.GetProfessionInfo(fishingIdx)
-		printD("Fishing: Name, Skill Level", name, skillLevel)
+if not aObj.isClsc then
+	-- get fishing profession index
+	local fishingIdx, skillLevel = (select(4, _G.GetProfessions())), 0
+	aObj:printD("Fishing Profession index", fishingIdx)
+	local function getSkillLvl()
+		if fishingIdx then
+			local name, _, skillLevel = _G.GetProfessionInfo(fishingIdx)
+			aObj:printD("Fishing: Name, Skill Level", name, skillLevel)
+		end
 	end
 end
+
+local mhSlotId, ohSlotId, hSlotId = (GetInventorySlotInfo("MainHandSlot")), (GetInventorySlotInfo("SecondaryHandSlot")), (GetInventorySlotInfo("HeadSlot"))
+aObj:printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
+
 -- local function chkExclFP()
 -- 	printD("chkExclFP")
 -- 	-- see if excluded fishing pole(s) can now be equipped
@@ -74,75 +69,37 @@ end
 -- 	end
 -- end
 local fpEquipped = false
-local function chkWeapons(mhItem)
-	if not mhItem then mhItem = GetInventoryItemID("player", mhSlotId) end
+local function chkWeapons()
+	local mhItem = GetInventoryItemID("player", mhSlotId)
+	local ohItem = GetInventoryItemID("player", ohSlotId)
 
 	-- check to see if fishing rod already equipped
 	if not fishingPoles[mhItem] then
 		-- get current Weapon(s)
-		mhWeapon, ohWeapon = mhItem
-		printD("current weapons:", mhWeapon, ohWeapon)
+		_G.mhWeapon, _G.ohWeapon = mhItem, ohItem
+		aObj:printD("current weapons:", _G.mhWeapon, _G.ohWeapon)
 		fpEquipped = false
 	else
 		fpEquipped = true
 	end
+	mhItem, ohItem = nil, nil
 end
 local fhEquipped = false
-local function chkHelmet(hsItem)
-	if not hsItem then hsItem = GetInventoryItemID("player", hSlotId) end
+local function chkHelmet()
+	local hsItem = GetInventoryItemID("player", hSlotId)
 
 	-- check to see if fishing hat already equipped
 	if not fishingHats[hsItem] then
-		if helmet ~= hsItem then
-			helmet = hsItem
-			printD("current helmet:", helmet)
+		if _G.helmet ~= hsItem then
+			_G.helmet = hsItem
+			aObj:printD("current helmet:", _G.helmet)
 		end
 		fhEquipped = false
 	else
 		fhEquipped = true
 	end
+	hsItem = nil
 end
-
-aObj.ae.RegisterEvent(aName .. "-fishing", "PLAYER_LOGIN", function(event, addon)
-
-	printD("PLAYER_LOGIN")
-	-- -- get current skill level
-	-- getSkillLvl()
-	-- -- see if any excluded Fishing Poles can be used
-	-- chkExclFP()
-	--
-	-- -- handle skillups
-	-- aObj.ae.RegisterEvent(aName, "SKILL_LINES_CHANGED", function(...)
-	-- 	printD("SKILL_LINES_CHANGED")
-	-- 	getSkillLvl()
-	-- 	if skillLevel == 50
-	-- 	or skillLevel == 100
-	-- 	or skillLevel == 200
-	-- 	or skillLevel == 225
-	-- 	or skillLevel == 300
-	-- 	or skillLevel == 525
-	-- 	then
-	-- 		chkExclFP()
-	-- 	end
-	-- end)
-
-	-- track equipment changes
-	aObj.ae.RegisterEvent(aName, "PLAYER_EQUIPMENT_CHANGED", function(event, invSlot, hasItem)
-		printD("PLAYER_EQUIPMENT_CHANGED", event, invSlot, hasItem)
-
-		local invItem = GetInventoryItemID("player", invSlot)
-
-		if invSlot == hSlotId then chkHelmet(invItem) end
-		if invSlot == mhSlotId
-		or invSlot == ohSlotId
-		then
-			chkWeapons(invItem)
-		end
-	end)
-
-	aObj.ae.UnregisterEvent(aName .. "-fishing", "PLAYER_LOGIN")
-
-end)
 
 function aObj:startFishing()
 
@@ -183,16 +140,16 @@ function aObj:endFishing()
 
 	-- check to see if fishing hat equipped
 	if fishingHats[GetInventoryItemID("player", hSlotId)] then
-		printD("endFishing, re-equipping Helmet", helmet)
+		aObj:printD("endFishing, re-equipping Helmet", _G.helmet)
 		-- equip last used helmet
-		EquipItemByName(helmet, hSlotId)
+		EquipItemByName(_G.helmet, hSlotId)
 	end
 	-- check to see if fishing rod equipped
 	if fishingPoles[GetInventoryItemID("player", mhSlotId)] then
-		printD("endFishing, re-equipping weapons", mhWeapon, ohWeapon)
+		aObj:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
 		-- equip last used weapon(s)
-		EquipItemByName(mhWeapon, mhSlotId)
-		if _G.ohWeapon then EquipItemByName(ohWeapon, ohSlotId) end
+		EquipItemByName(_G.mhWeapon, mhSlotId)
+		if _G.ohWeapon then EquipItemByName(_G.ohWeapon, ohSlotId) end
 	end
 
 	-- disable sound

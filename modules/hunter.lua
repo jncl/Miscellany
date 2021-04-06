@@ -1,17 +1,14 @@
 local aName, aObj = ...
 local _G = _G
 
-local function printD(...)
-	if not aObj.debug then return end
-	print(("%s [%s.%03d]"):format(aName .. "-hunter", _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
-end
+if aObj.isClsc then return end
 
 if not select(2, _G.UnitClass("player")) == "HUNTER" then return end
 
 -- track PLAYER_LOGIN event
 aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(event, addon)
 	-- if a Hunter and in a Garrison then stop tracking Stable Masters
- 	-- printD("PLAYER_LOGIN")
+ 	-- aObj:printD("PLAYER_LOGIN")
 	local function chgTracking(type, state)
 		-- printD("chgTracking:", type, state)
 		for i = 1, _G.GetNumTrackingTypes() do

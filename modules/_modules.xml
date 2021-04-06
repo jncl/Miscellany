@@ -1,0 +1,23 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+../../FrameXML/UI.xsd">
+
+<Script file="modules/alpaca_quests.lua"/>
+<Script file="modules/autoquest.lua"/>
+<Script file="modules/autorepair.lua"/>
+<Script file="modules/bagsopen.lua"/>
+<Script file="modules/chickenquests.lua"/>
+<Script file="modules/combatcheck.lua"/>
+<Script file="modules/debugchatframe.lua"/>
+<Script file="modules/fishing.lua"/>
+<Script file="modules/hunter.lua"/>
+<Script file="modules/jostle.lua"/>
+<Script file="modules/legiontreasure.lua"/>
+<Script file="modules/mop_treasure.lua"/>
+<Script file="modules/moviesound.lua"/>
+<Script file="modules/nzoth_chests.lua"/>
+<Script file="modules/nzoth_rares.lua"/>
+<!-- <Script file="modules/pet_battles.lua"/> -->
+<Script file="modules/questlevel.lua"/>
+<!-- <Script file="modules/rogue.lua"/> -->
+
+</Ui>

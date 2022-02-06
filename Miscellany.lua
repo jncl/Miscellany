@@ -13,17 +13,17 @@ aObj.oocTab = {}
 
 function aObj:printD(...)
 	if not aObj.debug then return end
-	print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
+	_G.print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
 end
 local printD = aObj.printD
 
 -- check to see if required libraries are loaded
 assert(LibStub, aName.." requires LibStub")
-for _, lib in _G.pairs{"AceEvent-3.0", "AceHook-3.0"} do
+for _, lib in _G.pairs{"AceEvent-3.0", "AceHook-3.0", "CallbackHandler-1.0"} do
 	assert(LibStub:GetLibrary(lib, true), aName .. " requires " .. lib)
 end
-aObj.ah = LibStub("AceHook-3.0")
 aObj.ae = LibStub("AceEvent-3.0")
+aObj.ah = LibStub("AceHook-3.0")
 
 local uCls = select(2, _G.UnitClass("player"))
 
@@ -42,6 +42,8 @@ function SlashCmdList.MISC(msg, editbox)
 	elseif msg == "sf" then aObj:startFishing()
 	elseif msg == "ef" then aObj:endFishing()
 	elseif msg == "bpet" then _G.battle_pets = not _G.battle_pets
+	elseif msg == "gmi" then
+		aObj:getMountInfo()
 	-- MoP specific
 	elseif msg == "tic" then aObj:timelessIsleChests()
 	elseif msg == "itc" then aObj:isleOfThunderChests()
@@ -66,13 +68,13 @@ function SlashCmdList.MISC(msg, editbox)
 		for i = 0, esNum - 1 do
 			_G.print(i, _G.C_EquipmentSet.GetEquipmentSetInfo(i))
 		end
-	-- enable Automatic Quest Tracking
 	elseif cmds[1] == "clrs" then
 		_G.print("showing RAID_CLASS_COLORS")
 		for k, v in pairs(_G.RAID_CLASS_COLORS) do
 			v["name"] = k
 			_G.print("RCC", v)
 		end
+	-- enable Automatic Quest Tracking
 	elseif cmds[1] == "aq" then
 		-- _G.print("Miscellany: autoQuest settings", _G.GetCVar("autoQuestWatch"), _G.GetCVar("autoQuestProgress"))
 		_G.autoquests = not _G.autoquests
@@ -131,6 +133,9 @@ aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(event, addon)
 			-- don't automatically add quests to watch frame when they're updated
 			_G.SetCVar("autoQuestProgress", 0)
 		end
+
+		aObj:checkFlyingAreas()
+
 	end
 
 	aObj.ae.UnregisterEvent(aName, "PLAYER_LOGIN")
@@ -173,6 +178,7 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(event, addon)
 		-- increase Max Zoom Factor
 		_G.SetCVar("cameraDistanceMaxZoomFactor", 2.9)
 		_G.MoveViewOutStart(50000)
+
 	end
 
 	-- -- show BugSack minimap icon if required
@@ -209,7 +215,6 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(event, addon)
 	if allSeen then
 		aObj.ae.UnregisterEvent(aName, "ADDON_LOADED")
 	end
-
 
 end)
 

@@ -1,10 +1,11 @@
-## Interface: 90005
+## Interface: 90105
 ## Title: Miscellany
+## Notes: A collection of functions to enhance the UI
 ## Author: Jncl
-## Version: 1.0
-## Notes: A collection of functions to change the UI etc
+## Version: 1.5
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
+## SavedVariables: flyingMounts
 ## SavedVariablesPerCharacter: battle_pets, mhWeapon, ohWeapon, helmet, autoquests
 
 Libs\_RequiredLibs.xml

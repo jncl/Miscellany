@@ -6,9 +6,9 @@ if aObj.isClsc then return end
 if not select(2, _G.UnitClass("player")) == "HUNTER" then return end
 
 -- track PLAYER_LOGIN event
-aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(event, addon)
+aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(_, _)
 	-- if a Hunter and in a Garrison then stop tracking Stable Masters
- 	-- aObj:printD("PLAYER_LOGIN")
+	-- aObj:printD("PLAYER_LOGIN")
 	local function chgTracking(type, state)
 		-- printD("chgTracking:", type, state)
 		for i = 1, _G.GetNumTrackingTypes() do
@@ -34,17 +34,17 @@ aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(event, addon)
 			chgTracking("Stable Master", true)
 		end
 	end
-	aObj.ae.RegisterEvent(aName, "ZONE_CHANGED_NEW_AREA", function()
+	aObj.ae.RegisterEvent(aName .. "hunter", "ZONE_CHANGED_NEW_AREA", function()
 		-- printD("ZONE_CHANGED_NEW_AREA")
 		chkSM()
 	end)
 	-- handle Garrison Heathstone into Town Hall
-	aObj.ae.RegisterEvent(aName, "ZONE_CHANGED", function()
+	aObj.ae.RegisterEvent(aName .. "hunter", "ZONE_CHANGED", function()
 		-- printD("ZONE_CHANGED")
 		chkSM()
 	end)
 	chkSM()
 
-	aObj.ae.UnregisterEvent(aName, "PLAYER_LOGIN")
+	aObj.ae.UnregisterEvent(aName .. "hunter", "PLAYER_LOGIN")
 
 end)

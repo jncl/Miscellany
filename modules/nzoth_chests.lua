@@ -12,7 +12,7 @@ local function checkTable(area, tab)
 	end
 
 end
-function aObj:lessonsInBrigandry    ()
+function aObj:lessonsInBrigandry() -- luacheck: ignore self
 
 	-- Lessons in Brigandry quest info [Uldum]
 	local tab = {
@@ -44,7 +44,7 @@ function aObj:lessonsInBrigandry    ()
 end
 
 -- Plunder the Plunderers quest (BfA) [Vale of Eternal Blossoms]
-function aObj:plunderThePlunderers()
+function aObj:plunderThePlunderers() -- luacheck: ignore self
 
 	-- Plunder the Plunderers quest info
 	local tab = {

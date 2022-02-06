@@ -25,7 +25,7 @@ if aObj.isClsc then
 	-- end)
 
 else
-	aObj.ae.RegisterEvent(aName .. "-rogue", "PLAYER_LOGIN", function(event, addon)
+	aObj.ae.RegisterEvent(aName .. "-rogue", "PLAYER_LOGIN", function(_, _)
 		local equipmentSetID = _G.C_EquipmentSet.GetEquipmentSetID("Stealth")
 		-- change EquipmentSet when stealthed, based upon EventEquip function
 		if _G.C_EquipmentSet.GetNumEquipmentSets() > 0
@@ -35,8 +35,8 @@ else
 			local function checkAndEquip(eSet)
 				local sTime, eTime = _G.select(5, _G.UnitCastingInfo("player"))
 				if eTime then -- casting in progress, equip after cast has finished, otherwise error and not equipped
-					aObj.at.ScheduleTimer(function(eSet)
-						_G.EquipmentManager_EquipSet(eSet)
+					aObj.at.ScheduleTimer(function(setID)
+						_G.EquipmentManager_EquipSet(setID)
 					end, (eTime - sTime) / 1000 + 0.1, eSet)
 				else
 					_G.EquipmentManager_EquipSet(eSet)
@@ -48,9 +48,9 @@ else
 				if not shifted then curSet = setName end
 			end)
 			aObj.ae.RegisterEvent(aName .. "-rogue", "UPDATE_SHAPESHIFT_FORM", function ()
-				local name, active
+				local _, name, active
 				for i = 1, _G.GetNumShapeshiftForms() do
-					local _, name, active = _G.GetShapeshiftFormInfo(i)
+					_, name, active = _G.GetShapeshiftFormInfo(i)
 					-- if active and _G.GetEquipmentSetInfoByName(name) then
 					if active
 					and _G.C_EquipmentSet.GetEquipmentSetID(name)
@@ -120,7 +120,7 @@ else
 
 	-- create a scanning tooltip
 	local scantt = _G.CreateFrame("GameTooltip", aName .. "_Scan_TT", nil, "GameTooltipTemplate")
-	scantt:SetOwner(WorldFrame, "ANCHOR_NONE")
+	scantt:SetOwner(_G.WorldFrame, "ANCHOR_NONE")
 	-- define default bags for pickpocketing items
 	local ppBag1 = 3
 	local ppBag2 = 1

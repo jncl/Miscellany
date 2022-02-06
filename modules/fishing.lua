@@ -1,9 +1,5 @@
-local aName, aObj = ...
+local _, aObj = ...
 local _G = _G
-
-local pairs, ipairs, select = _G.pairs, _G.ipairs, _G.select
-local GetInventorySlotInfo, GetInventoryItemID, EquipItemByName, GetItemInfo = _G.GetInventorySlotInfo, _G.GetInventoryItemID, _G.EquipItemByName, _G.GetItemInfo
-local GetCVarBool, SetCVar = _G.GetCVarBool, _G.SetCVar
 
 -- Fishing Macros
 local fishingPoles = {
@@ -40,17 +36,18 @@ local fishingHats = {
 }
 if not aObj.isClsc then
 	-- get fishing profession index
-	local fishingIdx, skillLevel = (select(4, _G.GetProfessions())), 0
+	local fishingIdx, skillLevel = (_G.select(4, _G.GetProfessions())), 0
 	aObj:printD("Fishing Profession index", fishingIdx)
 	local function getSkillLvl()
 		if fishingIdx then
-			local name, _, skillLevel = _G.GetProfessionInfo(fishingIdx)
-			aObj:printD("Fishing: Name, Skill Level", name, skillLevel)
+			local name, _, skillLvl = _G.GetProfessionInfo(fishingIdx)
+			aObj:printD("Fishing: Name, Skill Level", name, skillLvl)
 		end
 	end
 end
 
-local mhSlotId, ohSlotId, hSlotId = (GetInventorySlotInfo("MainHandSlot")), (GetInventorySlotInfo("SecondaryHandSlot")), (GetInventorySlotInfo("HeadSlot"))
+local mhSlotId, ohSlotId, hSlotId = (_G.GetInventorySlotInfo("MainHandSlot")), (_G.GetInventorySlotInfo("SecondaryHandSlot")), (_G.GetInventorySlotInfo("HeadSlot"))
+aObj:printD("Global MainHand, OffHand, Head slot ids", _G.mhWeapon, _G.ohWeapon, _G.helmet)
 aObj:printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
 
 -- local function chkExclFP()
@@ -70,8 +67,8 @@ aObj:printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
 -- end
 local fpEquipped = false
 local function chkWeapons()
-	local mhItem = GetInventoryItemID("player", mhSlotId)
-	local ohItem = GetInventoryItemID("player", ohSlotId)
+	local mhItem = _G.GetInventoryItemID("player", mhSlotId)
+	local ohItem = _G.GetInventoryItemID("player", ohSlotId)
 
 	-- check to see if fishing rod already equipped
 	if not fishingPoles[mhItem] then
@@ -82,23 +79,19 @@ local function chkWeapons()
 	else
 		fpEquipped = true
 	end
-	mhItem, ohItem = nil, nil
 end
 local fhEquipped = false
 local function chkHelmet()
-	local hsItem = GetInventoryItemID("player", hSlotId)
+	local hsItem = _G.GetInventoryItemID("player", hSlotId)
 
 	-- check to see if fishing hat already equipped
 	if not fishingHats[hsItem] then
-		if _G.helmet ~= hsItem then
-			_G.helmet = hsItem
-			aObj:printD("current helmet:", _G.helmet)
-		end
+		_G.helmet = hsItem
+		aObj:printD("current helmet:", _G.helmet)
 		fhEquipped = false
 	else
 		fhEquipped = true
 	end
-	hsItem = nil
 end
 
 function aObj:startFishing()
@@ -112,21 +105,21 @@ function aObj:startFishing()
 	chkHelmet()
 
 	-- Equip a fishing hat
-	for fh, _ in pairs(fishingHats) do
-		EquipItemByName(fh)
+	for fh, _ in _G.pairs(fishingHats) do
+		_G.EquipItemByName(fh)
 		if fhEquipped then break end
 	end
 
 	-- Equip a fishing rod
-	for fp, _ in pairs(fishingPoles) do
-		EquipItemByName(fp)
+	for fp, _ in _G.pairs(fishingPoles) do
+		_G.EquipItemByName(fp)
 		if fpEquipped then break end
 	end
 
-	if not GetCVarBool("Sound_EnableAllSound") then
+	if not _G.GetCVarBool("Sound_EnableAllSound") then
 		-- enable Sound
-		SetCVar("Sound_EnableAllSound", 1)
-		SetCVar("Sound_EnableSFX", 1)
+		_G.SetCVar("Sound_EnableAllSound", 1)
+		_G.SetCVar("Sound_EnableSFX", 1)
 	end
 
 
@@ -139,21 +132,21 @@ function aObj:endFishing()
 	end
 
 	-- check to see if fishing hat equipped
-	if fishingHats[GetInventoryItemID("player", hSlotId)] then
+	if fishingHats[_G.GetInventoryItemID("player", hSlotId)] then
 		aObj:printD("endFishing, re-equipping Helmet", _G.helmet)
 		-- equip last used helmet
-		EquipItemByName(_G.helmet, hSlotId)
+		_G.EquipItemByName(_G.helmet, hSlotId)
 	end
 	-- check to see if fishing rod equipped
-	if fishingPoles[GetInventoryItemID("player", mhSlotId)] then
+	if fishingPoles[_G.GetInventoryItemID("player", mhSlotId)] then
 		aObj:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
 		-- equip last used weapon(s)
-		EquipItemByName(_G.mhWeapon, mhSlotId)
-		if _G.ohWeapon then EquipItemByName(_G.ohWeapon, ohSlotId) end
+		_G.EquipItemByName(_G.mhWeapon, mhSlotId)
+		if _G.ohWeapon then _G.EquipItemByName(_G.ohWeapon, ohSlotId) end
 	end
 
 	-- disable sound
-	SetCVar("Sound_EnableAllSound", 0)
+	_G.SetCVar("Sound_EnableAllSound", 0)
 	_G.AudioOptionsFrame_AudioRestart()
 
 end

@@ -1,8 +1,8 @@
-local aName, aObj = ...
+local _, aObj = ...
 local _G = _G
 
 -- PetBattle functions
-if battle_pets then
+if _G.battle_pets then
 	-- Check to see if any Pets need to be healed, if so and the cooldown is up then display a message
 	local rbp, rbpEvt = {}
 	local function healthCheck(petID, name)
@@ -26,7 +26,7 @@ if battle_pets then
 
 	end
 	local lTime = 0
-	function aObj:checkPetHealth(battleEnded, time)
+	function aObj:checkPetHealth(battleEnded, time) -- luacheck: ignore self
 		aObj:printD("Checking BattlePets health", battleEnded, time, lTime)
 		-- handle 2 consecutive PET_BATTLE_CLOSE events, action the second one
 		if battleEnded
@@ -45,7 +45,7 @@ if battle_pets then
 			for i = 1, 3 do
 				local petID = _G.C_PetJournal.GetPetLoadOutInfo(i)
 				if not petID == nil then
-					local speciesID, customName, level, xp, maxXp, displayID, isFavorite, name, icon, petType, creatureID, sourceText, description, isWild, canBattle, tradable, unique = _G.C_PetJournal.GetPetInfoByPetID(petID)
+					local _, customName, _, _, _, name, _, _, _, _, _, _, _, _, _, _, _ = _G.C_PetJournal.GetPetInfoByPetID(petID)
 					healthCheck(petID, customName or name)
 				end
 			end
@@ -55,7 +55,7 @@ if battle_pets then
 			local numPets, numOwned = _G.C_PetJournal.GetNumPets()
 			aObj:printD("cPH numPets", numPets, numOwned)
 			for i = 1, numPets do
-				local petID, speciesID, isOwned, customName, level, favorite, isRevoked, name, icon, petType, creatureID, sourceText, description, isWildPet, canBattle = _G.C_PetJournal.GetPetInfoByIndex(i)
+				local petID, _, isOwned, customName, _, _, _, name, _, _, _, _, _, _, _ = _G.C_PetJournal.GetPetInfoByIndex(i)
 				aObj:printD(petID, isOwned, customName, name)
 				if petID ~= nil and isOwned then
 					healthCheck(petID, customName or name)
@@ -68,7 +68,7 @@ if battle_pets then
 	-- aObj:checkPetHealth()
 
 	-- Auto Forfeit PetBattles
-	aObj.ah:SecureHookScript(_G.PetBattleFrame.BottomFrame.ForfeitButton, "OnClick", function(this)
+	aObj.ah:SecureHookScript(_G.PetBattleFrame.BottomFrame.ForfeitButton, "OnClick", function(_)
 		_G.C_PetBattles.ForfeitGame()
 		_G.StaticPopup_Hide("PET_BATTLE_FORFEIT")
 	end)

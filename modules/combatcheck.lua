@@ -2,11 +2,9 @@ local aName, aObj = ...
 local _G = _G
 
 -- handle in Combat situations
-local inCombat = _G.InCombatLockdown()
-aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_DISABLED", function(...)
+aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_DISABLED", function(_)
 	-- printD("PLAYER_REGEN_DISABLED")
 	-- _G.print("Miscellany - PLAYER_REGEN_DISABLED")
-	inCombat = true
 	_G.UIErrorsFrame:AddMessage("YOU ARE UNDER ATTACK.", 1, 0, 0)
 	_G.SetCVar("nameplateShowEnemies", 1)
 	-- equip "Normal" set if a fishing pole is equipped
@@ -21,9 +19,8 @@ aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_DISABLED", function(...)
 	end
 end)
 
-aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_ENABLED", function(...)
+aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_ENABLED", function(_)
 	-- printD("PLAYER_REGEN_ENABLED")
-	inCombat = false
 	_G.UIErrorsFrame:AddMessage("Finished fighting.", 1, 1, 0)
 	_G.SetCVar("nameplateShowEnemies", 0)
 	for _, v in _G.pairs(aObj.oocTab) do

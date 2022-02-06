@@ -1,9 +1,9 @@
 local _, aObj = ...
 local _G = _G
 
-function aObj:AddDebugChatFrame()
+function aObj:AddDebugChatFrame() -- luacheck: ignore self
 
-	local id = _G.NUM_CHAT_WINDOWS
+	local id = 10
 	local cf = _G["ChatFrame" .. id]
 	local cft = _G["ChatFrame" .. id .. "Tab"]
 
@@ -24,15 +24,13 @@ function aObj:AddDebugChatFrame()
 
 	for i = 1, _G.NUM_CHAT_WINDOWS do
 		_G.SetChatWindowLocked(i, false)
-		local cf = _G["ChatFrame" .. i]
-		if cf then
-			_G.FCFTab_UpdateAlpha(cf)
-			_G.FCF_SetChatWindowFontSize(nil, cf, 12)
-			_G.FCF_SetWindowAlpha(cf, 0)
+		local fObj = _G["ChatFrame" .. i]
+		if fObj then
+			_G.FCFTab_UpdateAlpha(fObj)
+			_G.FCF_SetChatWindowFontSize(nil, fObj, 12)
+			_G.FCF_SetWindowAlpha(fObj, 0)
 		end
-		if i == 1 then cf:SetMaxLines(1000) end
+		if i == 1 then fObj:SetMaxLines(1000) end
 	end
 
-	id, cf, cft = nil, nil, nil
-	
 end

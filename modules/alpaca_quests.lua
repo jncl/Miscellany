@@ -2,7 +2,7 @@ local _, aObj = ...
 local _G = _G
 
 -- Alpaca It Up quest (BfA)
-function aObj:alpacaItUp()
+function aObj:alpacaItUp() -- luacheck: ignore self
 
 	local function checkTable(tab)
 
@@ -58,7 +58,7 @@ function aObj:alpacaItUp()
 end
 
 -- Elusive Quickhoof mount in Vol'dun (BfA)
-function aObj:elusiveQuickhoof()
+function aObj:elusiveQuickhoof() -- luacheck: ignore self
 
 	local function checkTable(tab)
 

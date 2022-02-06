@@ -9,21 +9,21 @@ local qIcon = {
 function aObj:autoQuests()
 
 	if not _G.autoquests then
-		self.ae.UnregisterEvent(aName, "GOSSIP_SHOW")
-		self.ae.UnregisterEvent(aName, "QUEST_DETAIL")
-		self.ae.UnregisterEvent(aName, "QUEST_GREETING")
-		self.ae.UnregisterEvent(aName, "QUEST_PROGRESS")
-		self.ae.UnregisterEvent(aName, "QUEST_COMPLETE")
+		self.ae.UnregisterEvent(aName .. "autoquests", "GOSSIP_SHOW")
+		self.ae.UnregisterEvent(aName .. "autoquests", "QUEST_DETAIL")
+		self.ae.UnregisterEvent(aName .. "autoquests", "QUEST_GREETING")
+		self.ae.UnregisterEvent(aName .. "autoquests", "QUEST_PROGRESS")
+		self.ae.UnregisterEvent(aName .. "autoquests", "QUEST_COMPLETE")
 		if not self.isClsc then
 			self.ah:Unhook("AutoQuestPopupTracker_Update")
 		end
 		return
 	end
 
-	local IsShiftKeyDown, UnitName, GetTitleText = _G.IsShiftKeyDown, _G.UnitName, _G.GetTitleText
+	local IsShiftKeyDown = _G.IsShiftKeyDown
 	-- AutoGossip by Ygrane
 	-- N.B. GossipFrame used for FlightMap
-	self.ae.RegisterEvent(aName, "GOSSIP_SHOW", function(...)
+	self.ae.RegisterEvent(aName .. "autoquests", "GOSSIP_SHOW", function(_)
 		local btnCnt = _G.GossipFrame.buttons and #_G.GossipFrame.buttons or _G.GossipFrame.buttonIndex
 		self:printD("GOSSIP_SHOW", btnCnt)
 
@@ -80,7 +80,6 @@ function aObj:autoQuests()
 					end
 				end
 			end
-			btnCnt, btn, bTex, bAtl, qIncomplete = nil, nil, nil, nil, nil
 		end
 
 		-- -- Bodyguard dialog check
@@ -93,14 +92,14 @@ function aObj:autoQuests()
 
 	end)
 	-- Auto Accept Quest
-	self.ae.RegisterEvent(aName, "QUEST_DETAIL", function(...)
+	self.ae.RegisterEvent(aName .. "autoquests", "QUEST_DETAIL", function(_)
 		aObj:printD("QUEST_DETAIL")
 		if not IsShiftKeyDown()	then
 			_G.AcceptQuest()
 		end
 	end)
 	-- Auto Accept/Complete Multiple Quests
-	self.ae.RegisterEvent(aName, "QUEST_GREETING", function(...)
+	self.ae.RegisterEvent(aName .. "autoquests", "QUEST_GREETING", function(_)
 		self:printD("QUEST_GREETING", _G.GetNumActiveQuests(), _G.GetNumAvailableQuests())
 		if not aObj.isClsc then
 			for questTitleButton in _G.QuestFrameGreetingPanel.titleButtonPool:EnumerateActive() do
@@ -131,11 +130,10 @@ function aObj:autoQuests()
 					_G.SelectAvailableQuest(_G["QuestTitleButton" .. i]:GetID())
 				end
 			end
-			numActiveQuests, numAvailableQuests = nil, nil
 		end
 	end)
 	-- Auto Progress Quest
-	self.ae.RegisterEvent(aName, "QUEST_PROGRESS", function(...)
+	self.ae.RegisterEvent(aName .. "autoquests", "QUEST_PROGRESS", function(_)
 		self:printD("QUEST_PROGRESS")
 		if _G.IsQuestCompletable()
 		and not IsShiftKeyDown()
@@ -144,7 +142,7 @@ function aObj:autoQuests()
 		end
 	end)
 	-- Auto Complete Quest
-	self.ae.RegisterEvent(aName, "QUEST_COMPLETE", function(...)
+	self.ae.RegisterEvent(aName .. "autoquests", "QUEST_COMPLETE", function(_)
 		self:printD("QUEST_COMPLETE", _G.GetNumQuestChoices(), IsShiftKeyDown())
 		if _G.GetNumQuestChoices() < 2
 		and not IsShiftKeyDown()
@@ -180,7 +178,7 @@ function aObj:autoQuests()
 		-- 	end
 		-- end)
 		self.ah:SecureHook("AutoQuestPopupTracker_Update", function(owningModule)
-			self:printD("AutoQuestPopupTracker_Update", owningModule)
+			-- self:printD("AutoQuestPopupTracker_Update", owningModule)
 		end)
 	end
 

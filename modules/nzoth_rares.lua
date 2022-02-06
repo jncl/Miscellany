@@ -10,7 +10,7 @@ local function checkTable(area, tab)
 
 end
 -- Terrors from the Deep quest (BfA) [Uldum]
-function aObj:TerrorsFromTheDeep()
+function aObj:TerrorsFromTheDeep() -- luacheck: ignore self
 
 	-- Terrors from the Deep quest info [Uldum]
 	local tab = {
@@ -37,7 +37,7 @@ function aObj:TerrorsFromTheDeep()
 end
 
 -- The Sun King's Chosen quest (BfA) [Uldum]
-function aObj:TheSunKingsChosen()
+function aObj:TheSunKingsChosen() -- luacheck: ignore self
 
 	--The Sun King's Chosen quest info [Uldum]
 	local tab = {

@@ -42,20 +42,20 @@ local function disableChatBubbles()
 	-- print("Misc disableChatBubbles#2:", _G.GetCVar("chatBubbles"), _G.GetCVar("chatBubblesParty"))
 
 end
-aObj.ae.RegisterEvent(aName, "CINEMATIC_START", function(event, ...)
+aObj.ae.RegisterEvent(aName, "CINEMATIC_START", function(_, _)
 
 	enableChatBubbles()
 	enableSound()
 
 end)
-aObj.ae.RegisterEvent(aName, "CINEMATIC_STOP", function(event, ...)
+aObj.ae.RegisterEvent(aName, "CINEMATIC_STOP", function(_, _)
 
 	disableChatBubbles()
 	disableSound()
 
 end)
-local mst = GetCVarBool("movieSubtitle") or 0
-aObj.ae.RegisterEvent(aName, "PLAY_MOVIE", function(event, ...)
+local mst = _G.GetCVarBool("movieSubtitle") or 0
+aObj.ae.RegisterEvent(aName, "PLAY_MOVIE", function(_, _)
 
 	enableChatBubbles()
 	enableSound()

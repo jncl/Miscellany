@@ -1,9 +1,9 @@
-local aName, aObj = ...
+local _, aObj = ...
 local _G = _G
 
 if not aObj.isClsc then return end
 
-aObj.ah:SecureHook("QuestLog_Update", function(this)
+aObj.ah:SecureHook("QuestLog_Update", function(_)
 
 	local numEntries, _ = _G.GetNumQuestLogEntries()
 
@@ -19,7 +19,6 @@ aObj.ah:SecureHook("QuestLog_Update", function(this)
 			end
 
 		end
-		qlt = nil
 	end
 
 end)

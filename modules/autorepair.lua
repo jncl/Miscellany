@@ -5,16 +5,8 @@ local select = _G.select
 
 -- AutoRepair by Ygrane
 -- Sell Junk by Tekkub
-aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(...)
-	if not aObj.isClsc then
-		-- repair gear using Guild funds if available
-		local gbMoney, repairAllCost, canRepair = _G.GetGuildBankMoney(), _G.GetRepairAllCost()
-		-- printD("Guild Repair", canRepair, repairAllCost <= gbMoney, _G.CanGuildBankRepair())
-		if canRepair then _G.RepairAllItems(_G.CanGuildBankRepair()) end
-		gbMoney, repairAllCost, canRepair = nil, nil, nil
-	else
-		if select(2, _G.GetRepairAllCost()) then _G.RepairAllItems() end
-	end
+aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(_)
+	if select(2, _G.GetRepairAllCost()) then _G.RepairAllItems() end
 
 	if _G.IsShiftKeyDown() then return end
 
@@ -35,10 +27,8 @@ aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(...)
 						 _G.DeleteCursorItem()
 					 end
 				 end
-				 grey = nil
 			 end
 		 end
 	 end
-	 grey, currPrice = nil, nil
 
 end)

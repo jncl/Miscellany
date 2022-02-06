@@ -26,7 +26,7 @@ function aObj:moveThem(offset)
 		return
 	end
 
-	local offset = offset or 22
+	offset = offset or 22
 
 	local topOffset, buffsAreaTopOffset = 0, 0
 	if _G.TicketStatusFrame and _G.TicketStatusFrame:IsShown() then
@@ -72,7 +72,6 @@ function aObj:moveThem(offset)
 			end
 		end
 	end
-	fObj = nil
 
 end
 
@@ -83,14 +82,14 @@ if not aObj.isClsc then
 	end)
 
 	-- Hook Vehicle Event as Player Frame moves
-	aObj.ae.RegisterEvent(aName, "UNIT_ENTERED_VEHICLE", function(event, ...)
+	aObj.ae.RegisterEvent(aName, "UNIT_ENTERED_VEHICLE", function(_, ...)
 		if _G.select(1, ...) == "player" then
 			_G.C_Timer.After(1.5, function()
 				aObj:moveThem()
 			end)
 		end
 	end)
-	aObj.ae.RegisterEvent(aName, "UNIT_EXITED_VEHICLE", function(event, ...)
+	aObj.ae.RegisterEvent(aName, "UNIT_EXITED_VEHICLE", function(_, ...)
 		if _G.select(1, ...) == "player" then
 			_G.C_Timer.After(1.5, function()
 				aObj:moveThem()

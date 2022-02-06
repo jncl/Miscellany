@@ -1,10 +1,10 @@
-local aName, aObj = ...
+local _, aObj = ...
 local _G = _G
 
 local IsQuestFlaggedCompleted, SlashCmdList, print, pairs, stringf = _G.IsQuestFlaggedCompleted, _G.SlashCmdList, _G.print, _G.pairs, _G.stringf
 
 -- Timeless Isle Chests
-function aObj:timelessIsleChests()
+function aObj:timelessIsleChests() -- luacheck: ignore self
 
 	-- Treasure, Treasure Everywhere Achievement (http://www.wowhead.com/achievement=8729#comments)
 
@@ -83,7 +83,7 @@ function aObj:timelessIsleChests()
 end
 
 -- Isle of Thunder Chests
-function aObj:isleOfThunderChests()
+function aObj:isleOfThunderChests() -- luacheck: ignore self
 
 	local function checkTable(tab)
 
@@ -108,7 +108,7 @@ function aObj:isleOfThunderChests()
 
 end
 
-function aObj:pandariaTreasures()
+function aObj:pandariaTreasures() -- luacheck: ignore self
 
 	local function checkTable(z, tab)
 
@@ -231,7 +231,7 @@ function aObj:pandariaTreasures()
 
 end
 
-function aObj:loreObjects()
+function aObj:loreObjects() -- luacheck: ignore self
 
 	local function checkTable(z, tab)
 
@@ -240,7 +240,7 @@ function aObj:loreObjects()
 			-- for i = 1, numCriteria do
 			-- 	printD(GetAchievementCriteriaInfo(info["achID"], i), i)
 			-- end
- 			local _, _, completed, _, _, _, _, _, _, _ = _G.GetAchievementCriteriaInfo(info["achID"], info["criIdx"])
+			local _, _, completed, _, _, _, _, _, _, _ = _G.GetAchievementCriteriaInfo(info["achID"], info["criIdx"])
 			if not completed then
 				SlashCmdList.TOMTOM_WAY(stringf("%s %s %s", z, info["coords"], a))
 			end

@@ -1,4 +1,4 @@
-local aName, aObj = ...
+local _, aObj = ...
 local _G = _G
 
 local print = _G.print
@@ -25,7 +25,7 @@ local chickenQuests = {
 }
 
 local qTab = {}
-function aObj:chickenQuests()
+function aObj:chickenQuests() -- luacheck: ignore self
 
 	_G.GetQuestsCompleted(qTab)
 	aObj:printD("#Completed Quests: ", #qTab)

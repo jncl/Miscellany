@@ -16,8 +16,9 @@
 <Script file="modules/moviesound.lua"/>
 <Script file="modules/nzoth_chests.lua"/>
 <Script file="modules/nzoth_rares.lua"/>
-<!-- <Script file="modules/pet_battles.lua"/> -->
 <Script file="modules/questlevel.lua"/>
+<Script file="modules/flyingmounts.lua"/>
+<!-- <Script file="modules/pet_battles.lua"/> -->
 <!-- <Script file="modules/rogue.lua"/> -->
 
 </Ui>

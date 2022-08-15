@@ -101,25 +101,34 @@ function aObj:startFishing()
 		return
 	end
 
-	chkWeapons()
-	chkHelmet()
-
-	-- Equip a fishing hat
-	for fh, _ in _G.pairs(fishingHats) do
-		_G.EquipItemByName(fh)
-		if fhEquipped then break end
-	end
-
-	-- Equip a fishing rod
-	for fp, _ in _G.pairs(fishingPoles) do
-		_G.EquipItemByName(fp)
-		if fpEquipped then break end
+	if aObj.isClsc then
+		chkWeapons()
+		chkHelmet()
+		-- Equip a fishing hat
+		for fh, _ in _G.pairs(fishingHats) do
+			_G.EquipItemByName(fh)
+			if fhEquipped then break end
+		end
+		-- Equip a fishing rod
+		for fp, _ in _G.pairs(fishingPoles) do
+			_G.EquipItemByName(fp)
+			if fpEquipped then break end
+		end
 	end
 
 	if not _G.GetCVarBool("Sound_EnableAllSound") then
 		-- enable Sound
 		_G.SetCVar("Sound_EnableAllSound", 1)
+		_G.SetCVar("Sound_MasterVolume", 1.0)
 		_G.SetCVar("Sound_EnableSFX", 1)
+		_G.SetCVar("Sound_SFXVolume", 1.0)
+		_G.SetCVar("Sound_EnableSoundWhenGameIsInBG", 1)
+		_G.SetCVar("Sound_EnableMusic", 0)
+		_G.SetCVar("Sound_EnableAmbience", 0)
+		_G.SetCVar("Sound_EnableDialog", 0)
+
+		_G.ActionStatus:DisplayMessage(SOUND_EFFECTS_ENABLED)
+		-- _G.AudioOptionsFrame_AudioRestart()
 	end
 
 
@@ -131,6 +140,7 @@ function aObj:endFishing()
 		return
 	end
 
+	if aObj.isClsc then
 	-- check to see if fishing hat equipped
 	if fishingHats[_G.GetInventoryItemID("player", hSlotId)] then
 		aObj:printD("endFishing, re-equipping Helmet", _G.helmet)
@@ -144,9 +154,17 @@ function aObj:endFishing()
 		_G.EquipItemByName(_G.mhWeapon, mhSlotId)
 		if _G.ohWeapon then _G.EquipItemByName(_G.ohWeapon, ohSlotId) end
 	end
+end
 
-	-- disable sound
-	_G.SetCVar("Sound_EnableAllSound", 0)
-	_G.AudioOptionsFrame_AudioRestart()
+	if _G.GetCVarBool("Sound_EnableAllSound") then
+		-- disable sound
+		_G.SetCVar("Sound_EnableAllSound", 0)
+		_G.SetCVar("Sound_EnableMusic", 1)
+		_G.SetCVar("Sound_EnableAmbience", 1)
+		_G.SetCVar("Sound_EnableDialog", 1)
+
+		_G.ActionStatus:DisplayMessage(SOUND_EFFECTS_DISABLED)
+		-- _G.AudioOptionsFrame_AudioRestart()
+	end
 
 end

@@ -10,6 +10,15 @@ aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(_)
 
 	if _G.IsShiftKeyDown() then return end
 
+	-- N.B. CAN'T sell junk at Worn Anvil(s) in Torghast, Tower of the Damned
+	if _G.GetRealZoneText():find("Torghast")
+	and _G.UnitName("NPC") == "Worn Anvil"
+	then
+		return
+	end
+
+	-- _G.print("Misc - autorepair", _G.UnitName("NPC"))
+
 	-- Sell Junk, blatantly copied from SellJunk
 	local grey, currPrice
 	for bag = 0, 4 do
@@ -22,7 +31,7 @@ aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(_)
 					 _G.PickupContainerItem(bag, slot)
 					 -- ignore unsellable grey items
 					 if currPrice > 0 then
-						 _G.PickupMerchantItem()
+						 _G.PickupMerchantItem(0)
 					 else
 						 _G.DeleteCursorItem()
 					 end

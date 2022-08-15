@@ -8,6 +8,7 @@ local function enableSound()
 	seas = _G.GetCVar("Sound_EnableAllSound")
 
 	_G.SetCVar("Sound_EnableAllSound", 1)
+	_G.SetCVar("Sound_MasterVolume", 1.0)
 	_G.SetCVar("Sound_EnableSFX", 0)
 	_G.Sound_ToggleSound()
 

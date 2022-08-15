@@ -13,9 +13,10 @@ aObj.ah:SecureHook("QuestLog_Update", function(_)
 		if questIndex <= numEntries then
 			qlt = {_G.GetQuestLogTitle(questIndex)}
 			aObj:printD("QLU", qlt)
+			-- _G.Spew("", qlt)
 
 			if not qlt[4] then -- check for Header
-				_G["QuestLogTitle" .. i]:SetText("[" .. qlt[2] .. "] " .. qlt[1])
+				-- _G["QuestLogTitle" .. i]:SetText("[" .. qlt[2] .. "] " .. qlt[1])
 			end
 
 		end

@@ -4,7 +4,7 @@ local _G = _G
 local assert, print, select, stringf, pairs = _G.assert, _G.print, _G.select, _G.string.format, _G.pairs
 local CreateFrame, LibStub = _G.CreateFrame, _G.LibStub
 
-aObj.isClsc = _G.GetCVar("agentUID"):find("_classic") and true
+aObj.isClsc = _G.WOW_PROJECT_ID ~= _G.WOW_PROJECT_MAINLINE and true
 
 aObj.debug = false
 

@@ -12,7 +12,7 @@ aObj.ah:SecureHook("QuestLog_Update", function(_)
 		questIndex = i + _G.FauxScrollFrame_GetOffset(_G.QuestLogListScrollFrame)
 		if questIndex <= numEntries then
 			qlt = {_G.GetQuestLogTitle(questIndex)}
-			aObj:printD("QLU", qlt)
+			-- aObj:printD("QLU", qlt)
 			-- _G.Spew("", qlt)
 
 			if not qlt[4] then -- check for Header

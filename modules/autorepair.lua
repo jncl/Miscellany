@@ -1,12 +1,15 @@
 local aName, aObj = ...
 local _G = _G
 
-local select = _G.select
+local GetContainerNumSlots = _G.C_Container and _G.C_Container.GetContainerNumSlots or _G.GetContainerNumSlots
+local GetContainerItemLink = _G.C_Container and _G.C_Container.GetContainerItemLink or _G.GetContainerItemLink
+local PickupContainerItem = _G.C_Container and _G.C_Container.PickupContainerItem or _G.PickupContainerItem
+local GetItemInfo = _G.C_Container and _G.C_Container.GetItemInfo or _G.GetItemInfo
 
 -- AutoRepair by Ygrane
 -- Sell Junk by Tekkub
 aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(_)
-	if select(2, _G.GetRepairAllCost()) then _G.RepairAllItems() end
+	if _G.select(2, _G.GetRepairAllCost()) then _G.RepairAllItems() end
 
 	if _G.IsShiftKeyDown() then return end
 
@@ -17,18 +20,18 @@ aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(_)
 		return
 	end
 
-	-- _G.print("Misc - autorepair", _G.UnitName("NPC"))
+	-- _G.print("Misc - autorepair", _G.GetRealZoneText(), _G.UnitName("NPC"))
 
 	-- Sell Junk, blatantly copied from SellJunk
 	local grey, currPrice
 	for bag = 0, 4 do
-		for slot = 1, _G.GetContainerNumSlots(bag) do
-			local link = _G.GetContainerItemLink(bag, slot)
+		for slot = 1, GetContainerNumSlots(bag) do
+			local link = GetContainerItemLink(bag, slot)
 			if link then
-				grey = select(3, _G.GetItemInfo(link)) == 0 and true or false
+				grey = _G.select(3, GetItemInfo(link)) == 0 and true or false
 				if grey then
-					 currPrice = select(11, _G.GetItemInfo(link))
-					 _G.PickupContainerItem(bag, slot)
+					 currPrice = _G.select(11, GetItemInfo(link))
+					 PickupContainerItem(bag, slot)
 					 -- ignore unsellable grey items
 					 if currPrice > 0 then
 						 _G.PickupMerchantItem(0)

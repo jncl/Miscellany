@@ -3,7 +3,7 @@ local _G = _G
 
 if aObj.isClsc then return end
 
-if not select(2, _G.UnitClass("player")) == "HUNTER" then return end
+if select(2, _G.UnitClass("player")) ~= "HUNTER" then return end
 
 -- track PLAYER_LOGIN event
 aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(_, _)
@@ -11,14 +11,16 @@ aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(_, _)
 	-- aObj:printD("PLAYER_LOGIN")
 	local function chgTracking(type, state)
 		-- printD("chgTracking:", type, state)
-		for i = 1, _G.GetNumTrackingTypes() do
-			local name, texture, active, category, nested = _G.GetTrackingInfo(i)
-			if type == name then
-				-- printD("TrackingInfo:", i, name, texture, active, category, nested)
-				if state ~= active then
-					-- printD("Setting" .. name .. " tracking " .. (state and "on" or "off"))
-					_G.SetTracking(i, state)
-					break
+		if not aObj.isRtl then
+			for i = 1, _G.GetNumTrackingTypes() do
+				local name, _, active, _, _ = _G.GetTrackingInfo(i)
+				if type == name then
+					-- printD("TrackingInfo:", i, name, texture, active, category, nested)
+					if state ~= active then
+						-- printD("Setting" .. name .. " tracking " .. (state and "on" or "off"))
+						_G.SetTracking(i, state)
+						break
+					end
 				end
 			end
 		end

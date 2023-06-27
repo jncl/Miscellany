@@ -1,21 +1,30 @@
 local aName, aObj = ...
 local _G = _G
+-- luacheck: ignore 631 (line is too long)
 
-local assert, print, select, stringf, pairs = _G.assert, _G.print, _G.select, _G.string.format, _G.pairs
-local CreateFrame, LibStub = _G.CreateFrame, _G.LibStub
+local assert, print, select, pairs = _G.assert, _G.print, _G.select, _G.pairs
+local LibStub = _G.LibStub
 
-aObj.isClsc = _G.WOW_PROJECT_ID ~= _G.WOW_PROJECT_MAINLINE and true
+aObj.isClsc    = _G.C_CVar.GetCVar("agentUID") == "wow_classic" and true
+aObj.isClscPTR = _G.C_CVar.GetCVar("agentUID") == "wow_classic_ptr" and true
+aObj.isClscERA = _G.C_CVar.GetCVar("agentUID") == "wow_classic_era" and true
+aObj.isClsc = aObj.isClsc or aObj.isClscPTR or aObj.isClscERA
+
+aObj.isRtl     = _G.C_CVar.GetCVar("agentUID") == "wow" and true
+aObj.isRtlPTR  = _G.C_CVar.GetCVar("agentUID") == "wow_ptr" and true
+aObj.isRtlPTRX = _G.C_CVar.GetCVar("agentUID") == "wow_ptr_x" and true
+aObj.isRtlBeta = _G.C_CVar.GetCVar("agentUID") == "wow_beta" and true
+aObj.isRtl = aObj.isRtl or aObj.isRtlPTR or aObj.isRtlPTRX or aObj.isRtlBeta
 
 aObj.debug = false
 
 -- out of combat table
 aObj.oocTab = {}
 
-function aObj:printD(...)
+function aObj:printD(...) -- luacheck: ignore self
 	if not aObj.debug then return end
 	_G.print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
 end
-local printD = aObj.printD
 
 -- check to see if required libraries are loaded
 assert(LibStub, aName.." requires LibStub")
@@ -25,11 +34,9 @@ end
 aObj.ae = LibStub("AceEvent-3.0")
 aObj.ah = LibStub("AceHook-3.0")
 
-local uCls = select(2, _G.UnitClass("player"))
-
 _G.SLASH_MISC1 = '/misc'
 aObj.loud = false
-function SlashCmdList.MISC(msg, editbox)
+function _G.SlashCmdList.MISC(msg, _)
 
 	local cmds = { (" "):split(msg) }
 
@@ -90,35 +97,38 @@ function SlashCmdList.MISC(msg, editbox)
 		print("Map Info:", mapinfo["mapID"], mapinfo["name"], mapinfo["mapType"], mapinfo["parentMapID"], posn["x"], posn["y"], areaName)
 
 	elseif msg == "dcf" then aObj:AddDebugChatFrame()
+	elseif msg == "pcf1" then
+		_G.ProfessionsCrafterOrders_LoadUI()
+		_G.ShowUIPanel(_G.ProfessionsCrafterOrdersFrame)
+	elseif msg == "pcf2" then
+		_G.ProfessionsCustomerOrders_LoadUI()
+		_G.ShowUIPanel(_G.ProfessionsCustomerOrdersFrame)
 	end
 	-- printD("slash command:", msg, editbox)
 
 end
 
 -- track PLAYER_LOGIN event
-aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(event, addon)
+aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(_, _)
 
 	-- Add another loot button and move them all up to fit if FramesResized isn't loaded
-	if not _G.IsAddOnLoaded("FramesResized") then
-		local yOfs, btn = -27
-		for i = 1, _G.LOOTFRAME_NUMBUTTONS do
-			btn = _G["LootButton" .. i]
-			btn:ClearAllPoints()
-			btn:SetPoint("TOPLEFT", 9, yOfs)
-			yOfs = yOfs - 41
-		end
-		if not aObj.isClsc then
-			_G.CreateFrame("ItemButton", "LootButton5", _G.LootFrame, "LootButtonTemplate")
-		else
+	if not aObj.isRtl then
+		if not _G.IsAddOnLoaded("FramesResized") then
+			local yOfs, btn = -27
+			for i = 1, _G.LOOTFRAME_NUMBUTTONS do
+				btn = _G["LootButton" .. i]
+				btn:ClearAllPoints()
+				btn:SetPoint("TOPLEFT", 9, yOfs)
+				yOfs = yOfs - 41
+			end
 			_G.CreateFrame("Button", "LootButton5", _G.LootFrame, "LootButtonTemplate")
+			_G.LootButton5:SetPoint("TOPLEFT", 9, yOfs)
+			_G.LootButton5.id = 5
+			_G.LOOTFRAME_NUMBUTTONS = 5
 		end
-		_G.LootButton5:SetPoint("TOPLEFT", 9, yOfs)
-		_G.LootButton5.id = 5
-		_G.LOOTFRAME_NUMBUTTONS = 5
-		yOfs = nil
 	end
 
-	if not aObj.isClsc then
+	if aObj.isRtl then
 		-- if not running AAP-Core then automatically watch quests & their progress
 		if not _G.IsAddOnLoaded("AAP-Core") then
 			-- printD("autoQuest", _G.GetCVar("autoQuestWatch"), _G.GetCVar("autoQuestProgress"))
@@ -138,6 +148,11 @@ aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(event, addon)
 
 	end
 
+	-- FIXME: this is to fix a bug in AzeriteUtil.lua line 7
+	-- if aObj.isRtl then
+	-- 	_G.EQUIPPED_LAST = _G.INVSLOT_LAST_EQUIPPED
+	-- end
+
 	aObj.ae.UnregisterEvent(aName, "PLAYER_LOGIN")
 
 end)
@@ -149,7 +164,7 @@ local trackedAddonsSeen = {
 	["Blizzard_FlightMap"] = false,
 }
 local allSeen = false
-aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(event, addon)
+aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(_, addon)
 	-- aObj:printD(event, addon)
 
 	-- -- Pet Battle functions
@@ -219,31 +234,43 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(event, addon)
 end)
 
 -- delete item from Bag if Alt+Right Clicked
-aObj.ah:SecureHook("ContainerFrameItemButton_OnModifiedClick", function(self, button)
-
-    if button == "RightButton"
+local PickupContainerItem = _G.C_Container and _G.C_Container.PickupContainerItem or _G.PickupContainerItem
+local function deleteItem(item, btn)
+    if btn == "RightButton"
     and _G.IsAltKeyDown()
     then
-        _G.PickupContainerItem(self:GetParent():GetID(), self:GetID())
+        PickupContainerItem(item:GetParent():GetID(), item:GetID())
         _G.DeleteCursorItem()
     end
-
-end)
+end
+if not aObj.isRtl then
+	aObj.ah:SecureHook("ContainerFrameItemButton_OnModifiedClick", function(self, button)
+		deleteItem(self, button)
+	end)
+else
+	aObj.ah:SecureHook("ContainerFrame_GenerateFrame", function(frame, _, _)
+		for _, item in frame:EnumerateValidItems() do
+			if not aObj.ah:IsHooked(item, "OnModifiedClick") then
+				aObj.ah:SecureHook(item, "OnModifiedClick", function(this, button)
+					deleteItem(this, button)
+				end)
+			end
+		end
+	end)
+end
 
 -- resize TaxiFrame
 _G.TaxiFrame:SetScale(1.5)
 
 -- Only show Available skills at trainer
-aObj.ae.RegisterEvent(aName, "TRAINER_SHOW", function(...)
-
+aObj.ae.RegisterEvent(aName, "TRAINER_SHOW", function(_)
 	_G.SetTrainerServiceTypeFilter("unavailable", 0)
-
 end)
 
 -- handle UI error messages when required
-aObj.ae.RegisterEvent(aName, "UI_ERROR_MESSAGE", function(event, ...)
+aObj.ae.RegisterEvent(aName, "UI_ERROR_MESSAGE", function(_, ...)
 
-	aObj:printD(select(1, ...), select(2, ...))
+	-- aObj:printD(select(1, ...), select(2, ...))
 
 	-- dismount if required
 	if select(2, ...) == _G.SPELL_FAILED_NOT_MOUNTED
@@ -265,6 +292,5 @@ aObj.ae.RegisterEvent(aName, "UI_ERROR_MESSAGE", function(event, ...)
 	-- then
 	-- 	-- CancelShapeshiftForm()
 	end
-	-- handle mounted when attacking
 
 end)

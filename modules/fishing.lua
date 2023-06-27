@@ -34,10 +34,10 @@ local fishingHats = {
 	[118380] = true, -- Highfish Cap (+100 Fishing) (7 days duration)
 	[118393] = true, -- Tentacled Hat (+100 Fishing) (5 days duration)
 }
-if not aObj.isClsc then
+if aObj.isRtl then
 	-- get fishing profession index
 	local fishingIdx, skillLevel = (_G.select(4, _G.GetProfessions())), 0
-	aObj:printD("Fishing Profession index", fishingIdx)
+	-- aObj:printD("Fishing Profession index", fishingIdx)
 	local function getSkillLvl()
 		if fishingIdx then
 			local name, _, skillLvl = _G.GetProfessionInfo(fishingIdx)
@@ -47,8 +47,8 @@ if not aObj.isClsc then
 end
 
 local mhSlotId, ohSlotId, hSlotId = (_G.GetInventorySlotInfo("MainHandSlot")), (_G.GetInventorySlotInfo("SecondaryHandSlot")), (_G.GetInventorySlotInfo("HeadSlot"))
-aObj:printD("Global MainHand, OffHand, Head slot ids", _G.mhWeapon, _G.ohWeapon, _G.helmet)
-aObj:printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
+-- aObj:printD("Global MainHand, OffHand, Head slot ids", _G.mhWeapon, _G.ohWeapon, _G.helmet)
+-- aObj:printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
 
 -- local function chkExclFP()
 -- 	printD("chkExclFP")
@@ -127,8 +127,11 @@ function aObj:startFishing()
 		_G.SetCVar("Sound_EnableAmbience", 0)
 		_G.SetCVar("Sound_EnableDialog", 0)
 
-		_G.ActionStatus:DisplayMessage(SOUND_EFFECTS_ENABLED)
-		-- _G.AudioOptionsFrame_AudioRestart()
+		if aObj.isRtl then
+			_G.ActionStatus:DisplayMessage(SOUND_EFFECTS_ENABLED)
+		else
+			_G.AudioOptionsFrame_AudioRestart()
+		end
 	end
 
 
@@ -141,20 +144,20 @@ function aObj:endFishing()
 	end
 
 	if aObj.isClsc then
-	-- check to see if fishing hat equipped
-	if fishingHats[_G.GetInventoryItemID("player", hSlotId)] then
-		aObj:printD("endFishing, re-equipping Helmet", _G.helmet)
-		-- equip last used helmet
-		_G.EquipItemByName(_G.helmet, hSlotId)
+		-- check to see if fishing hat equipped
+		if fishingHats[_G.GetInventoryItemID("player", hSlotId)] then
+			aObj:printD("endFishing, re-equipping Helmet", _G.helmet)
+			-- equip last used helmet
+			_G.EquipItemByName(_G.helmet, hSlotId)
+		end
+		-- check to see if fishing rod equipped
+		if fishingPoles[_G.GetInventoryItemID("player", mhSlotId)] then
+			aObj:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
+			-- equip last used weapon(s)
+			_G.EquipItemByName(_G.mhWeapon, mhSlotId)
+			if _G.ohWeapon then _G.EquipItemByName(_G.ohWeapon, ohSlotId) end
+		end
 	end
-	-- check to see if fishing rod equipped
-	if fishingPoles[_G.GetInventoryItemID("player", mhSlotId)] then
-		aObj:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
-		-- equip last used weapon(s)
-		_G.EquipItemByName(_G.mhWeapon, mhSlotId)
-		if _G.ohWeapon then _G.EquipItemByName(_G.ohWeapon, ohSlotId) end
-	end
-end
 
 	if _G.GetCVarBool("Sound_EnableAllSound") then
 		-- disable sound
@@ -163,8 +166,11 @@ end
 		_G.SetCVar("Sound_EnableAmbience", 1)
 		_G.SetCVar("Sound_EnableDialog", 1)
 
-		_G.ActionStatus:DisplayMessage(SOUND_EFFECTS_DISABLED)
-		-- _G.AudioOptionsFrame_AudioRestart()
+		if aObj.isRtl then
+			_G.ActionStatus:DisplayMessage(SOUND_EFFECTS_DISABLED)
+		else
+			_G.AudioOptionsFrame_AudioRestart()
+		end
 	end
 
 end

@@ -1,34 +1,26 @@
 local aName, aObj = ...
 local _G = _G
 
-local ToggleAllBags, CloseAllBags, OpenAllBags = _G.ToggleAllBags, _G.CloseAllBags, _G.OpenAllBags
 -- Open/Close bags
-aObj.ae.RegisterEvent(aName, "BANKFRAME_OPENED", function(_)
-	ToggleAllBags() -- N.B. DOESN'T work here (PTR)
-	OpenAllBags()
+aObj.ah:SecureHookScript(_G.BankFrame, "OnShow", function(_)
+	_G.ToggleAllBags()
 end)
-aObj.ae.RegisterEvent(aName, "BANKFRAME_CLOSED", function(_)
-	CloseAllBags()
+aObj.ah:SecureHookScript(_G.BankFrame, "OnHide", function(_)
+	_G.CloseAllBags()
 end)
-if not aObj.isClsc then
-	aObj.ae.RegisterEvent(aName, "GUILDBANKFRAME_OPENED", function(_)
-		ToggleAllBags()
-	end)
-	aObj.ae.RegisterEvent(aName, "GUILDBANKFRAME_CLOSED", function(_)
-		CloseAllBags()
-	end)
-	aObj.ae.RegisterEvent(aName, "OBLITERUM_FORGE_SHOW", function(_)
-		ToggleAllBags()
-	end)
-	aObj.ae.RegisterEvent(aName, "OBLITERUM_FORGE_CLOSE", function(_)
-		CloseAllBags()
-	end)
-	aObj.ae.RegisterEvent(aName, "SCRAPPING_MACHINE_SHOW", function(_)
-		ToggleAllBags() -- N.B. DOESN'T work here (PTR)
-		OpenAllBags()
-	end)
-	aObj.ae.RegisterEvent(aName, "SCRAPPING_MACHINE_CLOSE", function(_)
-		CloseAllBags()
+if not aObj.isClscERA then
+	aObj.ae.RegisterEvent(aName .. "bagsopen", "PLAYER_INTERACTION_MANAGER_FRAME_SHOW", function(_, ...)
+		local type = ...
+		if type == 10 then
+			aObj.ah:SecureHookScript(_G.GuildBankFrame, "OnShow", function(_)
+				_G.ToggleAllBags()
+			end)
+			aObj.ah:SecureHookScript(_G.GuildBankFrame, "OnHide", function(_)
+				_G.CloseAllBags()
+			end)
+			_G.ToggleAllBags()
+		end
+		aObj.ae.UnregisterEvent(aName .. "bagsopen", "PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
 	end)
 end
 

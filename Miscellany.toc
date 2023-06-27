@@ -1,12 +1,20 @@
-## Interface: 90205
+## Interface: 100100
+## Interface-Classic: 11403
+## Interface-BCC: 20504
+## Interface-Wrath: 30401
+
 ## Title: Miscellany
+## IconTexture: Interface\Icons\INV_Drink_05
+
 ## Notes: A collection of functions to enhance the UI
 ## Author: Jncl
-## Version: 1.5
+## Version: @project-version@
+
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## SavedVariables: flyingMounts
 ## SavedVariablesPerCharacter: battle_pets, mhWeapon, ohWeapon, helmet, autoquests
+## Globe: check-classic
 
 Libs\_RequiredLibs.xml
 Libs\_OptionalLibs.xml

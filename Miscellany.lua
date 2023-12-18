@@ -5,16 +5,20 @@ local _G = _G
 local assert, print, select, pairs = _G.assert, _G.print, _G.select, _G.pairs
 local LibStub = _G.LibStub
 
-aObj.isClsc    = _G.C_CVar.GetCVar("agentUID") == "wow_classic" and true
-aObj.isClscPTR = _G.C_CVar.GetCVar("agentUID") == "wow_classic_ptr" and true
-aObj.isClscERA = _G.C_CVar.GetCVar("agentUID") == "wow_classic_era" and true
-aObj.isClsc = aObj.isClsc or aObj.isClscPTR or aObj.isClscERA
+aObj.isClsc       = _G.C_CVar.GetCVar("agentUID") == "wow_classic" and true
+aObj.isClscPTR    = _G.C_CVar.GetCVar("agentUID") == "wow_classic_ptr" and true
+aObj.isClscERA    = _G.C_CVar.GetCVar("agentUID") == "wow_classic_era" and true
+aObj.isClscERAPTR = _G.C_CVar.GetCVar("agentUID") == "wow_classic_era_ptr" and true
+aObj.isClsc       = aObj.isClsc or aObj.isClscPTR
+aObj.isClscERA    = aObj.isClscERA or aObj.isClscERAPTR
 
 aObj.isRtl     = _G.C_CVar.GetCVar("agentUID") == "wow" and true
 aObj.isRtlPTR  = _G.C_CVar.GetCVar("agentUID") == "wow_ptr" and true
 aObj.isRtlPTRX = _G.C_CVar.GetCVar("agentUID") == "wow_ptr_x" and true
 aObj.isRtlBeta = _G.C_CVar.GetCVar("agentUID") == "wow_beta" and true
-aObj.isRtl = aObj.isRtl or aObj.isRtlPTR or aObj.isRtlPTRX or aObj.isRtlBeta
+aObj.isRtl     = aObj.isRtl or aObj.isRtlPTR or aObj.isRtlPTRX or aObj.isRtlBeta
+
+-- print("Misc ver", aObj.isClsc, aObj.isClscERA, aObj.isRtl)
 
 aObj.debug = false
 
@@ -41,35 +45,52 @@ function _G.SlashCmdList.MISC(msg, _)
 	local cmds = { (" "):split(msg) }
 
 	-- get Completed quest info
-	if msg == "chicken" then aObj:chickenQuests()
-	elseif msg == "debug" then
+	if cmds[1] == "chicken" then
+		aObj:chickenQuests()
+	elseif cmds[1] == "debug" then
 		aObj.debug = not aObj.debug
 		_G.print("Debug ", aObj.debug and "enabled" or "disabled")
-	elseif msg == "loud" then aObj.loud = not aObj.loud
-	elseif msg == "sf" then aObj:startFishing()
-	elseif msg == "ef" then aObj:endFishing()
-	elseif msg == "bpet" then _G.battle_pets = not _G.battle_pets
-	elseif msg == "gmi" then
+	elseif cmds[1] == "loud" then
+		aObj.loud = not aObj.loud
+	elseif cmds[1] == "sf" then
+		aObj:startFishing()
+	elseif cmds[1] == "ef" then
+		aObj:endFishing()
+	elseif cmds[1] == "bpet" then _G.battle_pets = not _G.battle_pets
+	elseif cmds[1] == "gmi" then
 		aObj:getMountInfo()
 	-- MoP specific
-	elseif msg == "tic" then aObj:timelessIsleChests()
-	elseif msg == "itc" then aObj:isleOfThunderChests()
-	elseif msg == "pt" then aObj:pandariaTreasures()
-	elseif msg == "pl" then aObj:loreObjects()
+	elseif cmds[1] == "tic" then
+		aObj:timelessIsleChests()
+	elseif cmds[1] == "itc" then
+		aObj:isleOfThunderChests()
+	elseif cmds[1] == "pt" then
+		aObj:pandariaTreasures()
+	elseif cmds[1] == "pl" then
+		aObj:loreObjects()
 	-- legion specific
-	elseif msg == "lth" then aObj:checkLTQHighmountain()
-	elseif msg == "ltq" then aObj:checkLTQ(msg)
+	elseif cmds[1] == "lth" then
+		aObj:checkLTQHighmountain()
+	elseif cmds[1] == "ltq" then
+		aObj:checkLTQ(msg)
 	-- BfA
-	elseif msg == "ait" then aObj:alpacaItUp()
-	elseif msg == "eq" then aObj:elusiveQuickhoof()
-	elseif msg == "lib" then aObj:lessonsInBrigandry()
-	elseif msg == "plp" then aObj:plunderThePlunderers()
-	elseif msg == "tftd" then aObj:TerrorsFromTheDeep()
-	elseif msg == "tskc" then aObj:TheSunKingsChosen()
+	elseif cmds[1] == "ait" then
+		aObj:alpacaItUp()
+	elseif cmds[1] == "eq" then
+		aObj:elusiveQuickhoof()
+	elseif cmds[1] == "lib" then
+		aObj:lessonsInBrigandry()
+	elseif cmds[1] == "plp" then
+		aObj:plunderThePlunderers()
+	elseif cmds[1] == "tftd" then
+		aObj:TerrorsFromTheDeep()
+	elseif cmds[1] == "tskc" then
+		aObj:TheSunKingsChosen()
 	-- Jostle
-	elseif msg == "cbj" then aObj:cbJostle(cmds[2])
+	elseif cmds[1] == "cbj" then
+		aObj:cbJostle(cmds[2])
 		-- EquipmentSet info
-	elseif msg == "esi" then
+	elseif cmds[1] == "esi" then
 		local esNum = _G.C_EquipmentSet.GetNumEquipmentSets()
 		_G.print("GetNumEquipmentSets()", esNum)
 		for i = 0, esNum - 1 do
@@ -87,22 +108,26 @@ function _G.SlashCmdList.MISC(msg, _)
 		_G.autoquests = not _G.autoquests
 		_G.print("Miscellany autoquests setting:", _G.autoquests)
 		aObj:autoQuests()
-	elseif msg:lower() == "locate" then
+	elseif cmds[1]:lower() == "locate" then
 		print("You Are Here: [", _G.GetRealZoneText(), "][", _G.GetSubZoneText(), "][", _G.C_Map.GetBestMapForUnit("player"), "]")
-	elseif msg:lower() == "mapinfo" then
+	elseif cmds[1]:lower() == "mapinfo" then
 		local uiMapID = _G.C_Map.GetBestMapForUnit("player")
 		local mapinfo = _G.C_Map.GetMapInfo(uiMapID)
 		local posn = _G.C_Map.GetPlayerMapPosition(uiMapID, "player")
 		local areaName= _G.MapUtil.FindBestAreaNameAtMouse(uiMapID, posn["x"], posn["y"])
 		print("Map Info:", mapinfo["mapID"], mapinfo["name"], mapinfo["mapType"], mapinfo["parentMapID"], posn["x"], posn["y"], areaName)
-
-	elseif msg == "dcf" then aObj:AddDebugChatFrame()
-	elseif msg == "pcf1" then
+	elseif cmds[1] == "dcf" then
+		aObj:AddDebugChatFrame()
+	elseif cmds[1] == "pcf1" then
 		_G.ProfessionsCrafterOrders_LoadUI()
 		_G.ShowUIPanel(_G.ProfessionsCrafterOrdersFrame)
-	elseif msg == "pcf2" then
+	elseif cmds[1] == "pcf2" then
 		_G.ProfessionsCustomerOrders_LoadUI()
 		_G.ShowUIPanel(_G.ProfessionsCustomerOrdersFrame)
+	elseif cmds[1] == "ght" then
+		aObj:getHunterTraining()
+	elseif cmds[1] == "cq" then
+		aObj:checkQuest(cmds[2])
 	end
 	-- printD("slash command:", msg, editbox)
 
@@ -232,32 +257,6 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(_, addon)
 	end
 
 end)
-
--- delete item from Bag if Alt+Right Clicked
-local PickupContainerItem = _G.C_Container and _G.C_Container.PickupContainerItem or _G.PickupContainerItem
-local function deleteItem(item, btn)
-    if btn == "RightButton"
-    and _G.IsAltKeyDown()
-    then
-        PickupContainerItem(item:GetParent():GetID(), item:GetID())
-        _G.DeleteCursorItem()
-    end
-end
-if not aObj.isRtl then
-	aObj.ah:SecureHook("ContainerFrameItemButton_OnModifiedClick", function(self, button)
-		deleteItem(self, button)
-	end)
-else
-	aObj.ah:SecureHook("ContainerFrame_GenerateFrame", function(frame, _, _)
-		for _, item in frame:EnumerateValidItems() do
-			if not aObj.ah:IsHooked(item, "OnModifiedClick") then
-				aObj.ah:SecureHook(item, "OnModifiedClick", function(this, button)
-					deleteItem(this, button)
-				end)
-			end
-		end
-	end)
-end
 
 -- resize TaxiFrame
 _G.TaxiFrame:SetScale(1.5)

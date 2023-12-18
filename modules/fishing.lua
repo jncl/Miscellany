@@ -3,9 +3,9 @@ local _G = _G
 
 -- Fishing Macros
 local fishingPoles = {
-	[6256]  = true,
-	[12225] = true, -- Blump Family Family Pole
-	[180135] = true, -- The Broken Angle'r [Shadowlands]
+	6256, -- Fishing Pole (sold by vendors)
+	12225, -- Blump Family Family Pole
+	180135, -- The Broken Angle'r [Shadowlands]
 	-- [46337] = true,
 	-- [84660] = true,
 	-- [116825] = true,
@@ -13,65 +13,39 @@ local fishingPoles = {
 	-- [118381] = true, -- Ephemeral Fishing Pole (duration 1 day)
 	-- [133755] = true, -- Underlight Angler
 }
--- local exclFishingPoles = {
--- 	[6365]  = 10, -- Strong Fishing	Pole
--- 	[6366]  = 50, -- Darkword Fishing Pole
--- 	[6367]  = 100, -- Big Iron Fishing Pole
--- 	[19022] = 100, -- Nat Pagle's Extreme Angler FC-5000
--- 	[25978] = 200, -- Seth's Graphite Fishing Pole
--- 	[45858] = 225, -- Nat's Lucky Fishing Pole
--- 	[19970] = 300, -- Arcanite Fishing Pole
--- 	[44050] = 300, -- Mastercraft Kala'ak Fishing Pole
--- 	[45991] = 300, -- Bone Fishing Pole
--- 	[45992] = 300, -- Jeweled Fishing Pole
--- 	[84661] = 525, -- Dragon Fishing Pole
--- }
 local fishingHats = {
-	[19972] = true, -- Lucky Fishing Hat (+5 Fishing)
-	[33820] = true, -- Weather-Beaten Fishing Hat (+5 Fishing) (Using this attaches a 10 min lure +75 Fishing)
-	[88710] = true, -- Nat's Hat (+5 Fishing) (Using this attaches a 10 min lure +150 Fishing)
-	[93732] = true, -- Darkmoon Fishing Cap (+5 Fishing)
-	[118380] = true, -- Highfish Cap (+100 Fishing) (7 days duration)
-	[118393] = true, -- Tentacled Hat (+100 Fishing) (5 days duration)
+	19972, -- Lucky Fishing Hat (+5 Fishing)
+	33820, -- Weather-Beaten Fishing Hat (+5 Fishing) (Using this attaches a 10 min lure +75 Fishing)
+	88710, -- Nat's Hat (+5 Fishing) (Using this attaches a 10 min lure +150 Fishing)
+	93732, -- Darkmoon Fishing Cap (+5 Fishing)
+	118380, -- Highfish Cap (+100 Fishing) (7 days duration)
+	118393, -- Tentacled Hat (+100 Fishing) (5 days duration)
 }
-if aObj.isRtl then
-	-- get fishing profession index
-	local fishingIdx, skillLevel = (_G.select(4, _G.GetProfessions())), 0
-	-- aObj:printD("Fishing Profession index", fishingIdx)
-	local function getSkillLvl()
-		if fishingIdx then
-			local name, _, skillLvl = _G.GetProfessionInfo(fishingIdx)
-			aObj:printD("Fishing: Name, Skill Level", name, skillLvl)
-		end
-	end
-end
-
-local mhSlotId, ohSlotId, hSlotId = (_G.GetInventorySlotInfo("MainHandSlot")), (_G.GetInventorySlotInfo("SecondaryHandSlot")), (_G.GetInventorySlotInfo("HeadSlot"))
--- aObj:printD("Global MainHand, OffHand, Head slot ids", _G.mhWeapon, _G.ohWeapon, _G.helmet)
--- aObj:printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
-
--- local function chkExclFP()
--- 	printD("chkExclFP")
--- 	-- see if excluded fishing pole(s) can now be equipped
--- 	for fp, reqLvl in pairs(exclFishingPoles) do
--- 		local fpName = (select(1, GetItemInfo(fp)))
--- 		printD("exclFishingPoles", fp, reqLvl, skillLevel, fpName)
--- 		if fpName
--- 		and reqLvl <= skillLevel
--- 		then
--- 			printD("adding excluded Fishing Pole", fpName)
--- 			fishingPoles[fp] = true
--- 			_G.table.remove(exclFishingPoles, fp)
+-- if aObj.isRtl then
+-- 	-- get fishing profession index
+-- 	local fishingIdx, _ = (_G.select(4, _G.GetProfessions())), 0
+-- 	-- aObj:printD("Fishing Profession index", fishingIdx)
+-- 	local function getSkillLvl()
+-- 		if fishingIdx then
+-- 			local name, _, skillLvl = _G.GetProfessionInfo(fishingIdx)
+-- 			self:printD("Fishing: Name, Skill Level", name, skillLvl)
 -- 		end
 -- 	end
 -- end
+
+local mhSlotId = _G.GetInventorySlotInfo("MainHandSlot")
+local ohSlotId = _G.GetInventorySlotInfo("SecondaryHandSlot")
+local hSlotId  = _G.GetInventorySlotInfo("HeadSlot")
+-- aObj:printD("Global MainHand, OffHand, Head slot ids", _G.mhWeapon, _G.ohWeapon, _G.helmet)
+-- aObj:printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
+
 local fpEquipped = false
 local function chkWeapons()
 	local mhItem = _G.GetInventoryItemID("player", mhSlotId)
 	local ohItem = _G.GetInventoryItemID("player", ohSlotId)
 
 	-- check to see if fishing rod already equipped
-	if not fishingPoles[mhItem] then
+	if not _G.tContains(fishingPoles, mhItem) then
 		-- get current Weapon(s)
 		_G.mhWeapon, _G.ohWeapon = mhItem, ohItem
 		aObj:printD("current weapons:", _G.mhWeapon, _G.ohWeapon)
@@ -85,7 +59,7 @@ local function chkHelmet()
 	local hsItem = _G.GetInventoryItemID("player", hSlotId)
 
 	-- check to see if fishing hat already equipped
-	if not fishingHats[hsItem] then
+	if not _G.tContains(fishingHats, hsItem) then
 		_G.helmet = hsItem
 		aObj:printD("current helmet:", _G.helmet)
 		fhEquipped = false
@@ -97,22 +71,28 @@ end
 function aObj:startFishing()
 
 	if _G.InCombatLockdown() then
-		aObj.oocTab[#aObj.oocTab + 1] = {self.startFishing, {nil}}
+		self.oocTab[#self.oocTab + 1] = {self.startFishing, {nil}}
 		return
 	end
 
-	if aObj.isClsc then
+	if not self.isRtl then
 		chkWeapons()
 		chkHelmet()
 		-- Equip a fishing hat
-		for fh, _ in _G.pairs(fishingHats) do
+		for _, fh in _G.ipairs_reverse(fishingHats) do
 			_G.EquipItemByName(fh)
-			if fhEquipped then break end
+			if fhEquipped then
+				self:printD("startFishing, equipping Hat", _G.helmet)
+				break
+			end
 		end
 		-- Equip a fishing rod
-		for fp, _ in _G.pairs(fishingPoles) do
+		for _, fp in _G.ipairs_reverse(fishingPoles) do
 			_G.EquipItemByName(fp)
-			if fpEquipped then break end
+			if fpEquipped then
+				self:printD("startFishing, equipping Fishing Pole", _G.helmet)
+				break
+			end
 		end
 	end
 
@@ -127,8 +107,8 @@ function aObj:startFishing()
 		_G.SetCVar("Sound_EnableAmbience", 0)
 		_G.SetCVar("Sound_EnableDialog", 0)
 
-		if aObj.isRtl then
-			_G.ActionStatus:DisplayMessage(SOUND_EFFECTS_ENABLED)
+		if self.isRtl then
+			_G.ActionStatus:DisplayMessage(_G.SOUND_EFFECTS_ENABLED)
 		else
 			_G.AudioOptionsFrame_AudioRestart()
 		end
@@ -139,23 +119,23 @@ end
 function aObj:endFishing()
 
 	if _G.InCombatLockdown() then
-		aObj.oocTab[#aObj.oocTab + 1] = {self.endFishing, {nil}}
+		self.oocTab[#self.oocTab + 1] = {self.endFishing, {nil}}
 		return
 	end
 
-	if aObj.isClsc then
+	if not self.isRtl then
 		-- check to see if fishing hat equipped
 		if fishingHats[_G.GetInventoryItemID("player", hSlotId)] then
-			aObj:printD("endFishing, re-equipping Helmet", _G.helmet)
 			-- equip last used helmet
 			_G.EquipItemByName(_G.helmet, hSlotId)
+			self:printD("endFishing, re-equipping Helmet", _G.helmet)
 		end
 		-- check to see if fishing rod equipped
 		if fishingPoles[_G.GetInventoryItemID("player", mhSlotId)] then
-			aObj:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
 			-- equip last used weapon(s)
 			_G.EquipItemByName(_G.mhWeapon, mhSlotId)
 			if _G.ohWeapon then _G.EquipItemByName(_G.ohWeapon, ohSlotId) end
+			self:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
 		end
 	end
 
@@ -166,8 +146,8 @@ function aObj:endFishing()
 		_G.SetCVar("Sound_EnableAmbience", 1)
 		_G.SetCVar("Sound_EnableDialog", 1)
 
-		if aObj.isRtl then
-			_G.ActionStatus:DisplayMessage(SOUND_EFFECTS_DISABLED)
+		if self.isRtl then
+			_G.ActionStatus:DisplayMessage(_G.SOUND_EFFECTS_DISABLED)
 		else
 			_G.AudioOptionsFrame_AudioRestart()
 		end

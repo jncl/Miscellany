@@ -48,3 +48,29 @@ aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(_, _)
 	aObj.ae.UnregisterEvent(aName .. "hunter", "PLAYER_LOGIN")
 
 end)
+
+-- track Pet Training spells
+function aObj:getHunterTraining() -- luacheck: ignore 212 (unused argument)
+
+	local spells1 = {
+		['Blood Beasts']   = 54753,
+		['Gargon']         = 61160,
+		['Cloud Serpents'] = 62254,
+		['Undead']         = 62255,
+		['Ottok']          = 66444,
+		['Dragonkin']      = 72094,
+	}
+	local spells2 = {
+		['Direhorns']      = 138430,
+		['Mechanicals']    = 205154,
+		['Feathermanes']   = 242155,
+	}
+
+	for name, id in _G.pairs(spells1) do
+		_G.print(name .. ":", _G.C_QuestLog.IsQuestFlaggedCompleted(id) and "Yes" or "No")
+	end
+	for name, id in _G.pairs(spells2) do
+		_G.print(name .. ":", _G.IsPlayerSpell(id) and "Yes" or "No")
+	end
+
+end

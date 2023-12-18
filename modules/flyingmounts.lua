@@ -1,5 +1,6 @@
 local aName, aObj = ...
 local _G = _G
+-- luacheck: ignore 631 (line is too long)
 
 if not aObj.isRtl then
 	return
@@ -52,25 +53,29 @@ local flyingAchievements = {
 	[890] = false, -- Into The Wild Blue Yonder, Learn the expert riding skill
 	[13250] = false, -- Battle for Azeroth Pathfinder, Part Two, allows flying in Kul Tiras and Zandalar
 	[15514] = false, -- Unlocking the Secrets, allows flying in Zereth Mortis
-	-- Unlocks flying in the Dragon Isles
+	[19307] = false, -- Dragon Isles Pathfinder, allows flying in the Dragon Isles
 }
 -- setup flyingMounts
 -- use /misc gmi to get MountID
 local flyingMounts = {
-	[1013] = true, -- Honeyback Harvester
-	[1320] = true, -- Shadowbarb Drone
-	[1510] = true, -- Dusklight Razorwing
+	-- [1013] = true, -- Honeyback Harvester
+	-- [1320] = true, -- Shadowbarb Drone
+	-- [1510] = true, -- Dusklight Razorwing
+	[1495] = true, -- Maldraxxian Corpsefly
+	[1674] = true, -- Temperamental Skyclaw
 }
 local dragonRidingMounts = {
 	[1590] = true, -- Windborne Velocidrake
+	[1591] = true, -- Cliffside Wylderdrake
 }
+
 function aObj:checkFlyingAreas()
 
 	-- check mounts loop through all mounts until required one is found
 	local function checkMounts(mntID, isFav)
 		-- aObj:printD("checkMounts#1", mntID, isFav, _G.C_MountJournal.GetNumDisplayedMounts())
 		for idx = 1, _G.C_MountJournal.GetNumDisplayedMounts() do
-			local name, _, mountID, _ = getMountInfo(idx)
+			local _, _, mountID, _ = getMountInfo(idx)
 			-- aObj:printD("checkMounts#2", name, isFavourite, mountID)
 			if mountID == mntID then
 				_G.C_MountJournal.SetIsFavorite(idx, isFav)
@@ -80,7 +85,7 @@ function aObj:checkFlyingAreas()
 		end
 	end
 
-	local function checkEvt(event)
+	local function checkEvt(event) -- luacheck: ignore 212
 		-- aObj:printD("regEvt#0", event)
 		-- wait for Zone info to be updated
 		_G.C_Timer.After(1, function()
@@ -89,26 +94,37 @@ function aObj:checkFlyingAreas()
 			then
 				return
 			end
-			local cMAID, rZone, rSubZone = _G.C_Map.GetBestMapForUnit("player"), _G.GetRealZoneText(), _G.GetSubZoneText()
+			local cMAID, rZone, rSubZone = _G.C_Map.GetBestMapForUnit("player"), _G.GetRealZoneText(), _G.GetSubZoneText() -- luacheck: ignore 211
 			-- aObj:printD("regEvt#1", cMAID, rZone, rSubZone)
 			if not cMAID then return end
 			local isFav = true
-			local instInfo = {_G.GetInstanceInfo()}
-			if instInfo[2] ~= "none" -- not in innstances/dungeons/scenarios etc
-			and not instInfo[1]:find("Garrison Level") -- not in Garrison
-			or not flyingAchievements[890] -- ignore this if character can't fly yet
-			or nonFlyingAreasByID[cMAID]
-			or nonFlyingAreas[rZone]
-			or dragonRidingAreasByID[cMAID]
-			then
-				isFav = false
+			if _G.IsFlyableArea() then
+				isFav = true
+			else
+				local instInfo = {_G.GetInstanceInfo()}
+				-- aObj:printD("regEvt#1.5", instInfo[1], instInfo[2])
+				if instInfo[2] ~= "none" -- not in instances/dungeons/scenarios etc
+				and not instInfo[1]:find("Garrison Level") -- not in Garrison
+				or not flyingAchievements[890] -- ignore this if character can't fly yet
+				or nonFlyingAreasByID[cMAID]
+				or nonFlyingAreas[rZone]
+				or (dragonRidingAreasByID[cMAID] and not flyingAchievements[19307]) -- can't fly in Dragon Isles
+				then
+					isFav = false
+				end
 			end
-			-- aObj:printD("regEvt#2", nonFlyingAreasByID[cMAID], nonFlyingAreas[rZone], isFav)
+			aObj:printD("regEvt#2", _G.IsFlyableArea(), nonFlyingAreasByID[cMAID], nonFlyingAreas[rZone], isFav)
 			for mID, _ in _G.pairs(flyingMounts) do
 				-- aObj:printD("regEvt#3", mID, isFav)
 				checkMounts(mID, isFav)
 			end
-			isFav = dragonRidingAreasByID[cMAID] and true or false
+			-- enable DragonRiding mounts if no other way to fly in Dragon Isles
+			-- N.B. can only ride dragons in The Primalist Future
+			-- aObj:printD("regEvt#3.5", dragonRidingAreasByID[cMAID], flyingAchievements[19307], cMAID == 2085)
+			isFav = ((dragonRidingAreasByID[cMAID] and not flyingAchievements[19307])
+				 or (dragonRidingAreasByID[cMAID] and cMAID == 2085))
+				 or (dragonRidingAreasByID[cMAID] and rSubZone:find("Suffusion Camp"))
+				 and true or false
 			-- aObj:printD("regEvt#4", dragonRidingAreasByID[cMAID], isFav)
 			for mID, _ in _G.pairs(dragonRidingMounts) do
 				-- aObj:printD("regEvt#5", mID, true)
@@ -134,7 +150,6 @@ function aObj:checkFlyingAreas()
 		if flyingAchievements[15514] then
 			nonFlyingAreasByID[1970] = false
 		end
-		-- TODO: enable flying in Dragon Isles
 	end
 	checkAchievements()
 	if chkEvt then
@@ -152,6 +167,7 @@ function aObj:checkFlyingAreas()
 	aObj.ae.RegisterEvent(aName .. "flyingmounts","ZONE_CHANGED", function(...) checkEvt(...) end)
 	aObj.ae.RegisterEvent(aName .. "flyingmounts","PLAYER_CONTROL_GAINED", function(...) checkEvt(...) end)
 	aObj.ae.RegisterEvent(aName .. "flyingmounts","UNIT_EXITED_VEHICLE", function(...) checkEvt(...) end)
+
 
 end
 

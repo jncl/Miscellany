@@ -42,3 +42,9 @@ function aObj:chickenQuests() -- luacheck: ignore self
 	end
 
 end
+
+function aObj:doChicken() -- luacheck: ignore self
+
+	_G.C_Timer.NewTicker(2.5, function() _G.DoEmote("CHICKEN") end, 50)
+
+end

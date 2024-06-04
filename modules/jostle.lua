@@ -1,11 +1,6 @@
+-- luacheck: ignore 631 (line is too long)
 local aName, aObj = ...
 local _G = _G
-
-local debug = true
-local function printD(...)
-	if not debug then return end
-	_G.print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
-end
 
 local framesToMove = {
 	["Boss1TargetFrame"]  = {move = true, yOfs = -236},
@@ -44,7 +39,7 @@ function aObj:moveThem(offset)
 		-- buffsAreaTopOffset = buffsAreaTopOffset + _G.OrderHallCommandBar:GetHeight()
 	end
 	framesToMove["BuffFrame"].yOfs = _G.Round(buffsAreaTopOffset) * -1
-	-- printD("moveThem: [offsets]", offset, topOffset, _G.Round(buffsAreaTopOffset))
+	-- aObj:printD("moveThem: [offsets]", offset, topOffset, _G.Round(buffsAreaTopOffset))
 
 	local fObj
 	for frame in _G.pairs(framesToMove) do
@@ -55,18 +50,18 @@ function aObj:moveThem(offset)
 			if fObj
 			and fObj:GetNumPoints() > 0 then
 				if fObj:GetNumPoints() > 1 then
-					-- printD("moveThem, GetNumPoints: ", frame, fObj:GetNumPoints())
+					-- aObj:printD("moveThem, GetNumPoints: ", frame, fObj:GetNumPoints())
 					return
 				end
 
 				local point, relTo, relPoint, xOfs, yOfs = fObj:GetPoint()
-				-- printD("moveThem:", frame, point, relTo, relPoint, xOfs, _G.Round(yOfs), framesToMove[frame].yOfs, framesToMove[frame].yOfs - topOffset, offset)
+				-- aObj:printD("moveThem:", frame, point, relTo, relPoint, xOfs, _G.Round(yOfs), framesToMove[frame].yOfs, framesToMove[frame].yOfs - topOffset, offset)
 
 				if _G.Round(yOfs) == framesToMove[frame].yOfs
 				or _G.Round(yOfs) == framesToMove[frame].yOfs - topOffset
 				then
 					-- move frame
-					-- printD("moving", frame)
+					-- aObj:printD("moving", frame)
 					fObj:SetPoint(point, relTo, relPoint, xOfs, yOfs - offset)
 				end
 			end
@@ -77,7 +72,7 @@ end
 
 if not aObj.isClsc then
 	aObj.ah:SecureHook("UIParent_UpdateTopFramePositions", function()
-		-- printD("UIParent_UpdateTopFramePositions")
+		-- aObj:printD("UIParent_UpdateTopFramePositions")
 		aObj:moveThem()
 	end)
 

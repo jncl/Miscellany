@@ -1,4 +1,4 @@
-local _, aObj = ...
+local aName, aObj = ...
 local _G = _G
 
 -- Fishing Macros
@@ -46,9 +46,9 @@ local function chkWeapons()
 
 	-- check to see if fishing rod already equipped
 	if not _G.tContains(fishingPoles, mhItem) then
-		-- get current Weapon(s)
+		-- save current Weapon(s)
 		_G.mhWeapon, _G.ohWeapon = mhItem, ohItem
-		aObj:printD("current weapons:", _G.mhWeapon, _G.ohWeapon)
+		-- aObj:printD("current weapons:", _G.mhWeapon, _G.ohWeapon)
 		fpEquipped = false
 	else
 		fpEquipped = true
@@ -60,8 +60,9 @@ local function chkHelmet()
 
 	-- check to see if fishing hat already equipped
 	if not _G.tContains(fishingHats, hsItem) then
+		-- save current helmet
 		_G.helmet = hsItem
-		aObj:printD("current helmet:", _G.helmet)
+		-- aObj:printD("current helmet:", _G.helmet)
 		fhEquipped = false
 	else
 		fhEquipped = true
@@ -71,41 +72,48 @@ end
 function aObj:startFishing()
 
 	if _G.InCombatLockdown() then
-		self.oocTab[#self.oocTab + 1] = {self.startFishing, {nil}}
+		self.oocTab[#self.oocTab + 1] = {self.startFishing, {self}}
 		return
 	end
 
 	if not self.isRtl then
+		aObj.ae.RegisterEvent(aName, "PLAYER_EQUIPMENT_CHANGED", function(...)
+			-- _G.print("startFishing PLAYER_EQUIPMENT_CHANGED", ...)
+		end)
 		chkWeapons()
-		chkHelmet()
-		-- Equip a fishing hat
-		for _, fh in _G.ipairs_reverse(fishingHats) do
-			_G.EquipItemByName(fh)
-			if fhEquipped then
-				self:printD("startFishing, equipping Hat", _G.helmet)
-				break
+		if not fpEquipped then
+			-- Equip a fishing rod
+			for _, fp in _G.ipairs_reverse(fishingPoles) do
+				_G.EquipItemByName(fp)
+				if fpEquipped then
+					-- self:printD("startFishing, equipping Fishing Pole", fp)
+					break
+				end
 			end
 		end
-		-- Equip a fishing rod
-		for _, fp in _G.ipairs_reverse(fishingPoles) do
-			_G.EquipItemByName(fp)
-			if fpEquipped then
-				self:printD("startFishing, equipping Fishing Pole", _G.helmet)
-				break
-			end
-		end
+		-- chkHelmet()
+		-- if not fhEquipped then
+		-- 	-- Equip a fishing hat
+		-- 	for _, fh in _G.ipairs_reverse(fishingHats) do
+		-- 		_G.EquipItemByName(fh)
+		-- 		if fhEquipped then
+		-- 			self:printD("startFishing, equipping Hat", fh)
+		-- 			break
+		-- 		end
+		-- 	end
+		-- end
 	end
 
-	if not _G.GetCVarBool("Sound_EnableAllSound") then
+	if not _G.C_CVar.GetCVarBool("Sound_EnableAllSound") then
 		-- enable Sound
-		_G.SetCVar("Sound_EnableAllSound", 1)
-		_G.SetCVar("Sound_MasterVolume", 1.0)
-		_G.SetCVar("Sound_EnableSFX", 1)
-		_G.SetCVar("Sound_SFXVolume", 1.0)
-		_G.SetCVar("Sound_EnableSoundWhenGameIsInBG", 1)
-		_G.SetCVar("Sound_EnableMusic", 0)
-		_G.SetCVar("Sound_EnableAmbience", 0)
-		_G.SetCVar("Sound_EnableDialog", 0)
+		_G.C_CVar.SetCVar("Sound_EnableAllSound", 1)
+		_G.C_CVar.SetCVar("Sound_MasterVolume", 1.0)
+		_G.C_CVar.SetCVar("Sound_EnableSFX", 1)
+		_G.C_CVar.SetCVar("Sound_SFXVolume", 1.0)
+		_G.C_CVar.SetCVar("Sound_EnableSoundWhenGameIsInBG", 1)
+		_G.C_CVar.SetCVar("Sound_EnableMusic", 0)
+		_G.C_CVar.SetCVar("Sound_EnableAmbience", 0)
+		_G.C_CVar.SetCVar("Sound_EnableDialog", 0)
 
 		if self.isRtl then
 			_G.ActionStatus:DisplayMessage(_G.SOUND_EFFECTS_ENABLED)
@@ -114,37 +122,40 @@ function aObj:startFishing()
 		end
 	end
 
-
 end
 function aObj:endFishing()
 
 	if _G.InCombatLockdown() then
-		self.oocTab[#self.oocTab + 1] = {self.endFishing, {nil}}
+		self.oocTab[#self.oocTab + 1] = {self.endFishing, {self}}
 		return
 	end
 
 	if not self.isRtl then
-		-- check to see if fishing hat equipped
-		if fishingHats[_G.GetInventoryItemID("player", hSlotId)] then
-			-- equip last used helmet
-			_G.EquipItemByName(_G.helmet, hSlotId)
-			self:printD("endFishing, re-equipping Helmet", _G.helmet)
-		end
 		-- check to see if fishing rod equipped
-		if fishingPoles[_G.GetInventoryItemID("player", mhSlotId)] then
+		if fpEquipped then
+		-- if fishingPoles[_G.GetInventoryItemID("player", mhSlotId)] then
 			-- equip last used weapon(s)
 			_G.EquipItemByName(_G.mhWeapon, mhSlotId)
 			if _G.ohWeapon then _G.EquipItemByName(_G.ohWeapon, ohSlotId) end
-			self:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
+			fpEquipped = false
+			-- self:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
 		end
+		-- -- check to see if fishing hat equipped
+		-- if fishingHats[_G.GetInventoryItemID("player", hSlotId)] then
+		-- 	-- equip last used helmet
+		-- 	_G.EquipItemByName(_G.helmet, hSlotId)
+		-- 	fhEquipped = false
+		-- 	self:printD("endFishing, re-equipping Helmet", _G.helmet)
+		-- end
+		aObj.ae.UnregisterEvent(aName, "PLAYER_EQUIPMENT_CHANGED")
 	end
 
-	if _G.GetCVarBool("Sound_EnableAllSound") then
+	if _G.C_CVar.GetCVarBool("Sound_EnableAllSound") then
 		-- disable sound
-		_G.SetCVar("Sound_EnableAllSound", 0)
-		_G.SetCVar("Sound_EnableMusic", 1)
-		_G.SetCVar("Sound_EnableAmbience", 1)
-		_G.SetCVar("Sound_EnableDialog", 1)
+		_G.C_CVar.SetCVar("Sound_EnableAllSound", 0)
+		_G.C_CVar.SetCVar("Sound_EnableMusic", 1)
+		_G.C_CVar.SetCVar("Sound_EnableAmbience", 1)
+		_G.C_CVar.SetCVar("Sound_EnableDialog", 1)
 
 		if self.isRtl then
 			_G.ActionStatus:DisplayMessage(_G.SOUND_EFFECTS_DISABLED)

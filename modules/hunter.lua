@@ -3,7 +3,7 @@ local _G = _G
 
 if not aObj.isRtl then return end
 
-if select(2, _G.UnitClass("player")) ~= "HUNTER" then return end
+if aObj.uCls ~= "HUNTER" then return end
 
 -- track PLAYER_LOGIN event
 aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(_, _)

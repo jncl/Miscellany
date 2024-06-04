@@ -8,7 +8,7 @@ local function deleteItem(item, button)
     if button == "RightButton"
     and _G.IsAltKeyDown()
     then
-		local bagID, slotID, info, hasNoValue, isLocked, pickupItemFunc
+		local bagID, slotID, info
 		-- print("RB & Alt keys pressed")
 		if not aObj.isRtl then
 			bagID, slotID = item:GetParent():GetID(), item:GetID()
@@ -17,18 +17,15 @@ local function deleteItem(item, button)
 		end
 		-- _G.Spew("item", item, bagID, slotID)
 		info = _G.C_Container.GetContainerItemInfo(bagID, slotID)
-		isLocked = info.isLocked
-		hasNoValue = info.hasNoValue
-		pickupItemFunc = _G.C_Container.PickupContainerItem
 		-- _G.Spew("info", info)
-		-- print("Item values", item.hasItem, hasNoValue, not isLocked)
+		-- print("Item values", item.hasItem, info.hasNoValue, not info.isLocked)
 		if item.hasItem
-		and not isLocked
-		and hasNoValue
+		and not info.isLocked
+		and info.hasNoValue
 		or _G.tContains(delItems, info.itemID)
 		then
 			-- print("PickupContainerItem", item)
-			pickupItemFunc(bagID, slotID)
+			_G.C_Container.PickupContainerItem(bagID, slotID)
 			if _G.CursorHasItem() then
 				-- print("CursorHasItem", item)
 				_G.DeleteCursorItem()
@@ -43,12 +40,7 @@ if not aObj.isRtl then
 		deleteItem(item, button)
 	end)
 else
-	-- print("deleteitems module loaded", _G.ContainerFrameItemButtonMixin.OnModifiedClick)
-	-- _G.hooksecurefunc(_G.ContainerFrameItemButtonMixin, "OnModifiedClick", function(item, button)
-	-- 	print("hsf CFIBM OnModifiedClick", item, button)
-	-- end)
 	aObj.ah:SecureHook(_G.ContainerFrameItemButtonMixin, "OnModifiedClick", function(item, button)
-		-- print("CFIBM OnModifiedClick", item, button)
 		deleteItem(item, button)
 	end)
 end

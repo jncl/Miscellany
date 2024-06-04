@@ -1,10 +1,11 @@
+-- luacheck: ignore 212 631 (unused argument|line too long)
 local _, aObj = ...
 local _G = _G
 
 local IsQuestFlaggedCompleted, SlashCmdList, print, pairs, stringf = _G.IsQuestFlaggedCompleted, _G.SlashCmdList, _G.print, _G.pairs, _G.stringf
 
 -- Timeless Isle Chests
-function aObj:timelessIsleChests() -- luacheck: ignore self
+function aObj:timelessIsleChests()
 
 	-- Treasure, Treasure Everywhere Achievement (http://www.wowhead.com/achievement=8729#comments)
 
@@ -12,9 +13,9 @@ function aObj:timelessIsleChests() -- luacheck: ignore self
 
 		local todo = false
 		for k, info in pairs(tab) do
-			if not IsQuestFlaggedCompleted(info["questID"]) then
-				aObj:printD(stringf("%s %s %s", "Timeless Isle", info["coords"], k))
-				SlashCmdList.TOMTOM_WAY(stringf("%s %s %s", "Timeless Isle", info["coords"], k))
+			if not _G.C_QuestLog.IsQuestFlaggedCompleted(info["questID"]) then
+				aObj:printD(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
+				SlashCmdList.TOMTOM_WAY(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
 				todo = true
 			end
 		end

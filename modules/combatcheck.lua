@@ -6,7 +6,7 @@ aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_DISABLED", function(_)
 	-- printD("PLAYER_REGEN_DISABLED")
 	-- _G.print("Miscellany - PLAYER_REGEN_DISABLED")
 	_G.UIErrorsFrame:AddMessage("YOU ARE UNDER ATTACK.", 1, 0, 0)
-	_G.SetCVar("nameplateShowEnemies", 1)
+	_G.C_CVar.SetCVar("nameplateShowEnemies", 1)
 	-- equip "Normal" set if a fishing pole is equipped
 	local mH = 	_G.GetInventoryItemLink("player", _G.GetInventorySlotInfo("MainHandSlot"))
 	if mH then
@@ -22,7 +22,7 @@ end)
 aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_ENABLED", function(_)
 	-- printD("PLAYER_REGEN_ENABLED")
 	_G.UIErrorsFrame:AddMessage("Finished fighting.", 1, 1, 0)
-	_G.SetCVar("nameplateShowEnemies", 0)
+	_G.C_CVar.SetCVar("nameplateShowEnemies", 0)
 	for _, v in _G.pairs(aObj.oocTab) do
 		v[1](_G.unpack(v[2]))
 	end

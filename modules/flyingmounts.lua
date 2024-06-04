@@ -19,6 +19,7 @@ local nonFlyingAreas = {
 	["Darkmoon Island"]		= true,
 	["Firelands"]           = true,
 	["Isle of Giants"]      = true,
+	["Isle of Thunder"]     = true,
 	["Timeless Isle"]		= true,
 	["Vision of Orgrimmar"] = true,
 	["Oribos"]              = true, -- [1670][1671][1672][1673]
@@ -40,20 +41,19 @@ local dragonRidingAreasByID = {
 	[2025] = true, -- "Thaldraszus, Dragon Isles"
 	[2112] = true, -- "Valdrakken, Dragon Isles"
 	[2085] = true, -- "The Primalist Future, Temporal Conflux, Dragon Isles"
+	-- MoP Remix
+	[371]  = true, -- Windward Isle, The Jade Forest
 }
-
-local function getMountInfo(idx)
-	-- aObj:printD("getMountInfo", idx)
-	local name, _, _, _, _, _, isFavourite, _, _, _, _, mountID = _G.C_MountJournal.GetDisplayedMountInfo(idx)
-	local _, _, _, _, mountTypeID, _, _, _, _ = _G.C_MountJournal.GetMountInfoExtraByID(idx)
-	return name, isFavourite, mountID, mountTypeID
-end
-
 local flyingAchievements = {
 	[890] = false, -- Into The Wild Blue Yonder, Learn the expert riding skill
 	[13250] = false, -- Battle for Azeroth Pathfinder, Part Two, allows flying in Kul Tiras and Zandalar
 	[15514] = false, -- Unlocking the Secrets, allows flying in Zereth Mortis
 	[19307] = false, -- Dragon Isles Pathfinder, allows flying in the Dragon Isles
+}
+-- flight enabling spells
+local flyingSpells = {
+	[34090] = false, -- Expert Riding
+	[34091] = false, -- Artisan Riding
 }
 -- setup flyingMounts
 -- use /misc gmi to get MountID
@@ -63,12 +63,19 @@ local flyingMounts = {
 	-- [1510] = true, -- Dusklight Razorwing
 	[1495] = true, -- Maldraxxian Corpsefly
 	[1674] = true, -- Temperamental Skyclaw
+	[2142] = true, -- August Phoenix
 }
 local dragonRidingMounts = {
 	[1590] = true, -- Windborne Velocidrake
 	[1591] = true, -- Cliffside Wylderdrake
 }
 
+local function getMountInfo(idx)
+	-- aObj:printD("getMountInfo", idx)
+	local name, _, _, _, _, _, isFavourite, _, _, _, _, mountID = _G.C_MountJournal.GetDisplayedMountInfo(idx)
+	local _, _, _, _, mountTypeID, _, _, _, _ = _G.C_MountJournal.GetMountInfoExtraByID(idx)
+	return name, isFavourite, mountID, mountTypeID
+end
 function aObj:checkFlyingAreas()
 
 	-- check mounts loop through all mounts until required one is found
@@ -76,7 +83,10 @@ function aObj:checkFlyingAreas()
 		-- aObj:printD("checkMounts#1", mntID, isFav, _G.C_MountJournal.GetNumDisplayedMounts())
 		for idx = 1, _G.C_MountJournal.GetNumDisplayedMounts() do
 			local _, _, mountID, _ = getMountInfo(idx)
+			--@debug@
+			-- local name, isFavourite, mountID, _ = getMountInfo(idx)
 			-- aObj:printD("checkMounts#2", name, isFavourite, mountID)
+			--@end-debug@
 			if mountID == mntID then
 				_G.C_MountJournal.SetIsFavorite(idx, isFav)
 				-- aObj:printD("checkMounts#3:", mntID, name, "Favourite: ", isFav)
@@ -98,22 +108,23 @@ function aObj:checkFlyingAreas()
 			-- aObj:printD("regEvt#1", cMAID, rZone, rSubZone)
 			if not cMAID then return end
 			local isFav = true
-			if _G.IsFlyableArea() then
-				isFav = true
-			else
+			if not _G.IsFlyableArea() then
 				local instInfo = {_G.GetInstanceInfo()}
 				-- aObj:printD("regEvt#1.5", instInfo[1], instInfo[2])
 				if instInfo[2] ~= "none" -- not in instances/dungeons/scenarios etc
 				and not instInfo[1]:find("Garrison Level") -- not in Garrison
 				or not flyingAchievements[890] -- ignore this if character can't fly yet
+				or (not flyingSpells[34090] and not flyingSpells[34090]) -- ignore this if character can't fly yet
 				or nonFlyingAreasByID[cMAID]
 				or nonFlyingAreas[rZone]
 				or (dragonRidingAreasByID[cMAID] and not flyingAchievements[19307]) -- can't fly in Dragon Isles
 				then
 					isFav = false
 				end
+			-- elseif _G.UnitLevel("player") < 30 then -- ignore this if character can't fly yet
+			-- 	isFav = false
 			end
-			aObj:printD("regEvt#2", _G.IsFlyableArea(), nonFlyingAreasByID[cMAID], nonFlyingAreas[rZone], isFav)
+			-- aObj:printD("regEvt#2", _G.IsFlyableArea(), nonFlyingAreasByID[cMAID], nonFlyingAreas[rZone], isFav)
 			for mID, _ in _G.pairs(flyingMounts) do
 				-- aObj:printD("regEvt#3", mID, isFav)
 				checkMounts(mID, isFav)
@@ -162,12 +173,38 @@ function aObj:checkFlyingAreas()
 		self.ae.UnregisterEvent(aName .. "flyingmounts", "ACHIEVEMENT_EARNED")
 	end
 
+	-- check flying spells
+	chkEvt = false
+	local function checkSpellss()
+		for spellID, known in _G.pairs(flyingSpells) do
+			local isKnown = _G.IsPlayerSpell(spellID)
+			-- aObj:printD("checkAchievements", aID, achieved, wasEarnedByMe)
+			if not known then
+				if isKnown then
+					flyingSpells[spellID] = true
+				end
+			else
+				chkEvt = true
+			end
+		end
+	end
+	checkSpellss()
+	if chkEvt then
+		self.ae.RegisterEvent(aName .. "flyingmounts", "SPELLS_CHANGED", function(...)
+			self:printD(...)
+			checkSpellss()
+			checkEvt("SPELLS_CHANGED")
+		end)
+	else
+		self.ae.UnregisterEvent(aName .. "flyingmounts", "SPELLS_CHANGED")
+	end
+
 	aObj.ae.RegisterEvent(aName .. "flyingmounts","PLAYER_ENTERING_WORLD", function(...) checkEvt(...) end)
 	aObj.ae.RegisterEvent(aName .. "flyingmounts","ZONE_CHANGED_NEW_AREA", function(...) checkEvt(...) end)
 	aObj.ae.RegisterEvent(aName .. "flyingmounts","ZONE_CHANGED", function(...) checkEvt(...) end)
 	aObj.ae.RegisterEvent(aName .. "flyingmounts","PLAYER_CONTROL_GAINED", function(...) checkEvt(...) end)
 	aObj.ae.RegisterEvent(aName .. "flyingmounts","UNIT_EXITED_VEHICLE", function(...) checkEvt(...) end)
-
+	aObj.ae.RegisterEvent(aName .. "flyingmounts","PLAYER_LEVEL_CHANGED", function(...) checkEvt(...) end)
 
 end
 

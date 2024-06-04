@@ -21,25 +21,22 @@ aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(_)
 
 	if _G.IsShiftKeyDown() then return end
 
-	-- Sell Junk, blatantly copied from SellJunk
-	local junk, currPrice
+	-- Sell Junk, based upon code from SellJunk
+	local iteminfo
 	for bag = 0, 4 do
 		for slot = 1, GetContainerNumSlots(bag) do
 			local link = GetContainerItemLink(bag, slot)
 			if link then
-				junk = _G.select(3, GetItemInfo(link)) == 0 and true or false
-				if junk then
-					 currPrice = _G.select(11, GetItemInfo(link))
-					 PickupContainerItem(bag, slot)
-					 -- ignore unsellable junk items
-					 if currPrice > 0 then
-						 _G.PickupMerchantItem(0)
-					 else
-						 _G.DeleteCursorItem()
-					 end
-				 end
-			 end
-		 end
-	 end
+				iteminfo = {GetItemInfo(link)}
+				if iteminfo[3] == 0 then -- itemQuality
+					-- ignore unsellable junk items
+					if iteminfo[11] > 0 then -- sellPrice
+						PickupContainerItem(bag, slot)
+						_G.PickupMerchantItem(0)
+					end
+				end
+			end
+		end
+	end
 
 end)

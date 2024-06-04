@@ -1,7 +1,7 @@
 local aName, aObj = ...
 local _G = _G
 
-if _G.UnitClass("player") ~= "ROGUE" then return end
+if aObj.uCls ~= "ROGUE" then return end
 
 -- hide StanceBar Frame
 _G.StanceBarFrame:Hide()

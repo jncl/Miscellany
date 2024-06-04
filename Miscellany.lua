@@ -1,6 +1,6 @@
+-- luacheck: ignore 212 631 (unused argument|line is too long)
 local aName, aObj = ...
 local _G = _G
--- luacheck: ignore 631 (line is too long)
 
 local assert, print, select, pairs = _G.assert, _G.print, _G.select, _G.pairs
 local LibStub = _G.LibStub
@@ -18,6 +18,9 @@ aObj.isRtlPTRX = _G.C_CVar.GetCVar("agentUID") == "wow_ptr_x" and true
 aObj.isRtlBeta = _G.C_CVar.GetCVar("agentUID") == "wow_beta" and true
 aObj.isRtl     = aObj.isRtl or aObj.isRtlPTR or aObj.isRtlPTRX or aObj.isRtlBeta
 
+-- store player class as English Spelling
+aObj.uCls = _G.select(2, _G.UnitClass("player"))
+
 -- print("Misc ver", aObj.isClsc, aObj.isClscERA, aObj.isRtl)
 
 aObj.debug = false
@@ -25,7 +28,7 @@ aObj.debug = false
 -- out of combat table
 aObj.oocTab = {}
 
-function aObj:printD(...) -- luacheck: ignore self
+function aObj:printD(...)
 	if not aObj.debug then return end
 	_G.print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
 end
@@ -45,8 +48,10 @@ function _G.SlashCmdList.MISC(msg, _)
 	local cmds = { (" "):split(msg) }
 
 	-- get Completed quest info
-	if cmds[1] == "chicken" then
+	if cmds[1] == "chickenq" then
 		aObj:chickenQuests()
+	elseif cmds[1] == "dc" then
+		aObj:doChicken()
 	elseif cmds[1] == "debug" then
 		aObj.debug = not aObj.debug
 		_G.print("Debug ", aObj.debug and "enabled" or "disabled")
@@ -104,7 +109,7 @@ function _G.SlashCmdList.MISC(msg, _)
 		end
 	-- enable Automatic Quest Tracking
 	elseif cmds[1] == "aq" then
-		-- _G.print("Miscellany: autoQuest settings", _G.GetCVar("autoQuestWatch"), _G.GetCVar("autoQuestProgress"))
+		-- _G.print("Miscellany: autoQuest settings", _G.C_CVar.GetCVar("autoQuestWatch"), _G.C_CVar.GetCVar("autoQuestProgress"))
 		_G.autoquests = not _G.autoquests
 		_G.print("Miscellany autoquests setting:", _G.autoquests)
 		aObj:autoQuests()
@@ -156,17 +161,17 @@ aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(_, _)
 	if aObj.isRtl then
 		-- if not running AAP-Core then automatically watch quests & their progress
 		if not _G.IsAddOnLoaded("AAP-Core") then
-			-- printD("autoQuest", _G.GetCVar("autoQuestWatch"), _G.GetCVar("autoQuestProgress"))
+			-- printD("autoQuest", _G.C_CVar.GetCVar("autoQuestWatch"), _G.C_CVar.GetCVar("autoQuestProgress"))
 			-- automatically add quests to watch frame
-			_G.SetCVar("autoQuestWatch", 1)
+			_G.C_CVar.SetCVar("autoQuestWatch", 1)
 			-- automatically add quests to watch frame when they're updated
-			_G.SetCVar("autoQuestProgress", 1)
-			-- printD("autoQuest#2", _G.GetCVar("autoQuestWatch"), _G.GetCVar("autoQuestProgress"))
+			_G.C_CVar.SetCVar("autoQuestProgress", 1)
+			-- printD("autoQuest#2", _G.C_CVar.GetCVar("autoQuestWatch"), _G.C_CVar.GetCVar("autoQuestProgress"))
 		else
 			-- don't automatically add quests to watch frame
-			_G.SetCVar("autoQuestWatch", 0)
+			_G.C_CVar.SetCVar("autoQuestWatch", 0)
 			-- don't automatically add quests to watch frame when they're updated
-			_G.SetCVar("autoQuestProgress", 0)
+			_G.C_CVar.SetCVar("autoQuestProgress", 0)
 		end
 
 		aObj:checkFlyingAreas()
@@ -216,7 +221,7 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(_, addon)
 		if _G.autoquests then aObj:autoQuests() end
 
 		-- increase Max Zoom Factor
-		_G.SetCVar("cameraDistanceMaxZoomFactor", 2.9)
+		_G.C_CVar.SetCVar("cameraDistanceMaxZoomFactor", 2.9)
 		_G.MoveViewOutStart(50000)
 
 	end

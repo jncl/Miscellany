@@ -96,16 +96,17 @@ function aObj:autoQuests()
 
 		end)
 	else
-		local function doQuest(eData)
-			self:printD("doQuest", eData.info.questID, eData.info.isComplete)
+		local eData
+		local function doQuest(elementData)
+			self:printD("doQuest", elementData.info.questID, elementData.info.isComplete, elementData.info.repeatable)
 			if aObj.debug then
-				_G.Spew("eData.info", eData.info)
+				_G.Spew("dq elementData.info", elementData.info)
 			end
-			if eData.info.isComplete then
-				_G.C_GossipInfo.SelectActiveQuest(eData.info.questID)
+			if elementData.info.isComplete then
+				_G.C_GossipInfo.SelectActiveQuest(elementData.info.questID)
 				closePanels()
-			elseif not eData.info.repeatable then
-				_G.C_GossipInfo.SelectAvailableQuest(eData.info.questID)
+			elseif not elementData.info.repeatable then
+				_G.C_GossipInfo.SelectAvailableQuest(elementData.info.questID)
 				closePanels()
 			end
 		end
@@ -129,8 +130,8 @@ function aObj:autoQuests()
 				if new ~= false then
 					self:printD("skinElement#1", elementData.buttonType)
 					if aObj.debug then
-						_G.Spew("elementData", elementData)
-						_G.Spew("elementData.info", elementData.info)
+						_G.Spew("gs elementData", elementData)
+						_G.Spew("gs elementData.info", elementData.info)
 					end
 					if not IsShiftKeyDown() then
 						if elementData.buttonType == _G.GOSSIP_BUTTON_TYPE_ACTIVE_QUEST
@@ -156,6 +157,13 @@ function aObj:autoQuests()
 			_G.ScrollUtil.AddInitializedFrameCallback(_G.GossipFrame.GreetingPanel.ScrollBox, skinGossip, aObj, true)
 			if savedElement then
 				self:printD("skinElement#2", cnt, savedElement:GetID())
+				eData = savedElement:GetElementData()
+				if aObj.debug then
+					_G.Spew("savedElement", savedElement)
+					_G.Spew("eData", eData)
+				end
+				-- ignore gossip option
+				if eData.info.name:find("review my basic training")	then return	end
 				_G.C_GossipInfo.SelectOptionByIndex(savedElement:GetID())
 			end
 			closePanels()

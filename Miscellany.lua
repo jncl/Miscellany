@@ -2,8 +2,9 @@
 local aName, aObj = ...
 local _G = _G
 
+aObj.debug = false
+
 local assert, print, select, pairs = _G.assert, _G.print, _G.select, _G.pairs
-local LibStub = _G.LibStub
 
 aObj.isClsc       = _G.C_CVar.GetCVar("agentUID") == "wow_classic" and true
 aObj.isClscPTR    = _G.C_CVar.GetCVar("agentUID") == "wow_classic_ptr" and true
@@ -23,8 +24,6 @@ aObj.uCls = _G.select(2, _G.UnitClass("player"))
 
 -- print("Misc ver", aObj.isClsc, aObj.isClscERA, aObj.isRtl)
 
-aObj.debug = false
-
 -- out of combat table
 aObj.oocTab = {}
 
@@ -33,6 +32,7 @@ function aObj:printD(...)
 	_G.print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
 end
 
+local LibStub = _G.LibStub
 -- check to see if required libraries are loaded
 assert(LibStub, aName.." requires LibStub")
 for _, lib in _G.pairs{"AceEvent-3.0", "AceHook-3.0", "CallbackHandler-1.0"} do
@@ -159,22 +159,38 @@ aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(_, _)
 	end
 
 	if aObj.isRtl then
+		local aqw, aqp = 0, 0
 		-- if not running AAP-Core then automatically watch quests & their progress
 		if not _G.IsAddOnLoaded("AAP-Core") then
 			-- printD("autoQuest", _G.C_CVar.GetCVar("autoQuestWatch"), _G.C_CVar.GetCVar("autoQuestProgress"))
-			-- automatically add quests to watch frame
-			_G.C_CVar.SetCVar("autoQuestWatch", 1)
-			-- automatically add quests to watch frame when they're updated
-			_G.C_CVar.SetCVar("autoQuestProgress", 1)
-			-- printD("autoQuest#2", _G.C_CVar.GetCVar("autoQuestWatch"), _G.C_CVar.GetCVar("autoQuestProgress"))
-		else
-			-- don't automatically add quests to watch frame
-			_G.C_CVar.SetCVar("autoQuestWatch", 0)
-			-- don't automatically add quests to watch frame when they're updated
-			_G.C_CVar.SetCVar("autoQuestProgress", 0)
+			aqw, aqp = 1, 1
 		end
+		-- automatically add quests id required
+		_G.C_CVar.SetCVar("autoQuestWatch", aqw)
+		-- automatically add quests when they're updated if required
+		_G.C_CVar.SetCVar("autoQuestProgress", aqp)
 
 		aObj:checkFlyingAreas()
+
+		-- MoP: Remix
+		-- automatically open Cache of Infinite Treasure
+		local timerunningSeasonID = _G.PlayerGetTimerunningSeasonID()
+		aObj.printD("timerunningSeasonID", timerunningSeasonID)
+		if timerunningSeasonID == 1 then
+			local myTimer = _G.C_Timer.NewTicker(15, function()
+				aObj.printD("Running Remix Ticker")
+				_G.C_Item.UseItemByName("Cache of Infinite Treasure")
+				_G.C_Item.UseItemByName("Minor Bronze Cache")
+				_G.C_Item.UseItemByName("Lesser Bronze Cache")
+				_G.C_Item.UseItemByName("Bronze Cache")
+				_G.C_Item.UseItemByName("Greater Bronze Cache")
+				-- N.B. opening these causes an error, [AddOn 'Miscellany' tried to call the protected function 'UNKNOWN()']
+				-- _G.C_Item.UseItemByName("Minor Spool of Eternal Thread")
+				-- _G.C_Item.UseItemByName("Lesser Spool of Eternal Thread")
+				-- _G.C_Item.UseItemByName("Spool of Eternal Thread")
+				-- _G.C_Item.UseItemByName("Greater Spool of Eternal Thread")
+			end)
+		end
 
 	end
 

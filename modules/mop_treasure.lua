@@ -2,8 +2,6 @@
 local _, aObj = ...
 local _G = _G
 
-local IsQuestFlaggedCompleted, SlashCmdList, print, pairs, stringf = _G.IsQuestFlaggedCompleted, _G.SlashCmdList, _G.print, _G.pairs, _G.stringf
-
 -- Timeless Isle Chests
 function aObj:timelessIsleChests()
 
@@ -15,7 +13,7 @@ function aObj:timelessIsleChests()
 		for k, info in pairs(tab) do
 			if not _G.C_QuestLog.IsQuestFlaggedCompleted(info["questID"]) then
 				aObj:printD(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
-				SlashCmdList.TOMTOM_WAY(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
+				_G.SlashCmdList.TOMTOM_WAY(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
 				todo = true
 			end
 		end
@@ -84,14 +82,14 @@ function aObj:timelessIsleChests()
 end
 
 -- Isle of Thunder Chests
-function aObj:isleOfThunderChests() -- luacheck: ignore self
+function aObj:isleOfThunderChests()
 
 	local function checkTable(tab)
 
 		for k, info in pairs(tab) do
-			if not IsQuestFlaggedCompleted(info["questID"]) then
-				aObj:printD(stringf("%s %s %s", "Timeless Isle", info["coords"], k))
-				SlashCmdList.TOMTOM_WAY(stringf("%s %s %s", "Isle of Thunder", info["coords"], k))
+			if not _G.C_QuestLog.IsQuestFlaggedCompleted(info["questID"]) then
+				aObj:printD(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
+				_G.SlashCmdList.TOMTOM_WAY(_G.string.format("%s %s %s", "Isle of Thunder", info["coords"], k))
 			else
 				print("All Weekly Isle of Thunder Chests have been found")
 			end
@@ -109,14 +107,14 @@ function aObj:isleOfThunderChests() -- luacheck: ignore self
 
 end
 
-function aObj:pandariaTreasures() -- luacheck: ignore self
+function aObj:pandariaTreasures()
 
 	local function checkTable(z, tab)
 
 		for a, info in pairs(tab) do
-			if not IsQuestFlaggedCompleted(info["questID"]) then
+			if not _G.C_QuestLog.IsQuestFlaggedCompleted(info["questID"]) then
 				for _, v in pairs(info["coords"]) do
-					SlashCmdList.TOMTOM_WAY(stringf("%s %s %s", z, v, a))
+					_G.SlashCmdList.TOMTOM_WAY(_G.string.format("%s %s %s", z, v, a))
 				end
 			end
 		end
@@ -232,7 +230,7 @@ function aObj:pandariaTreasures() -- luacheck: ignore self
 
 end
 
-function aObj:loreObjects() -- luacheck: ignore self
+function aObj:loreObjects()
 
 	local function checkTable(z, tab)
 
@@ -243,7 +241,7 @@ function aObj:loreObjects() -- luacheck: ignore self
 			-- end
 			local _, _, completed, _, _, _, _, _, _, _ = _G.GetAchievementCriteriaInfo(info["achID"], info["criIdx"])
 			if not completed then
-				SlashCmdList.TOMTOM_WAY(stringf("%s %s %s", z, info["coords"], a))
+				_G.SlashCmdList.TOMTOM_WAY(_G.string.format("%s %s %s", z, info["coords"], a))
 			end
 		end
 

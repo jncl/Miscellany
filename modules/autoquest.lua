@@ -8,12 +8,13 @@ local qIcon = {
 }
 function aObj:autoQuests()
 
-	local delay = 30
+	local delay, gotQuest = 30, false
 	local function closePanels()
 		_G.C_Timer.After(delay, function()
 			_G.C_GossipInfo.CloseGossip()
 			_G.HideUIPanel(_G.QuestFrame)
 		end)
+		gotQuest = false
 	end
 	if not _G.autoquests then
 		self.ae.UnregisterEvent(aName .. "autoquests", "GOSSIP_SHOW")
@@ -26,6 +27,11 @@ function aObj:autoQuests()
 		end
 		return
 	end
+
+	local ignStrings = {
+		["review my basic training"] = true,
+		["Dagger in the Dark"]       = true,
+	}
 
 	local IsShiftKeyDown = _G.IsShiftKeyDown
 	-- AutoGossip by Ygrane
@@ -117,7 +123,7 @@ function aObj:autoQuests()
 		-- GOSSIP_BUTTON_TYPE_AVAILABLE_QUEST = 5
 		self.ae.RegisterEvent(aName .. "autoquests", "GOSSIP_SHOW", function(_)
 			self:printD("GOSSIP_SHOW")
-			local cnt, savedElement = 0
+			local cnt, savedElement, ignore = 0
 			local function skinGossip(...)
 				local element, elementData, new, _
 				if _G.select("#", ...) == 2 then
@@ -127,6 +133,7 @@ function aObj:autoQuests()
 				else
 					_, element, elementData, new = ...
 				end
+				if gotQuest then return end
 				if new ~= false then
 					self:printD("skinElement#1", elementData.buttonType)
 					if aObj.debug then
@@ -138,6 +145,7 @@ function aObj:autoQuests()
 						or elementData.buttonType == _G.GOSSIP_BUTTON_TYPE_AVAILABLE_QUEST
 						then
 							doQuest(elementData)
+							gotQuest = true
 						elseif elementData.buttonType == _G.GOSSIP_BUTTON_TYPE_OPTION then
 							cnt = cnt + 1
 							if elementData.info.flags == _G.Enum.GossipOptionRecFlags.QuestLabelPrepend then
@@ -162,8 +170,15 @@ function aObj:autoQuests()
 					_G.Spew("savedElement", savedElement)
 					_G.Spew("eData", eData)
 				end
-				-- ignore gossip option
-				if eData.info.name:find("review my basic training")	then return	end
+				-- ignore gossip option if required
+				ignore = false
+				for str, _ in _G.pairs(ignStrings) do
+					if eData.info.name:find(str) then
+						ignore = true
+						break
+					end
+				end
+				if ignore then return end
 				_G.C_GossipInfo.SelectOptionByIndex(savedElement:GetID())
 			end
 			closePanels()
@@ -183,7 +198,7 @@ function aObj:autoQuests()
 			for questTitleButton in _G.QuestFrameGreetingPanel.titleButtonPool:EnumerateActive() do
 				self:printD("QG", questTitleButton, questTitleButton.isActive)
 				if aObj.debug then
-					_G.Spew("questTitleButton", questTitleButton)
+					_G.Spew("qg questTitleButton", questTitleButton)
 				end
 				if not IsShiftKeyDown() then
 					if questTitleButton then

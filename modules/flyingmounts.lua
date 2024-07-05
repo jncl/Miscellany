@@ -1,6 +1,6 @@
+-- luacheck: ignore 212 631 (unused argument|line too long)
 local aName, aObj = ...
 local _G = _G
--- luacheck: ignore 631 (line is too long)
 
 if not aObj.isRtl then
 	return
@@ -57,6 +57,12 @@ local flyingSpells = {
 }
 -- setup flyingMounts
 -- use /misc gmi to get MountID
+local groundMounts = {
+		[125]  = true, -- Riding Turtle
+		[804]  = true, -- Ratstallion
+		[1286] = true, -- Caravan Hyena
+		[1585] = true, -- Colossal Wraithbound Mawrat
+	}
 local flyingMounts = {
 	-- [1013] = true, -- Honeyback Harvester
 	-- [1320] = true, -- Shadowbarb Drone
@@ -78,6 +84,28 @@ local function getMountInfo(idx)
 end
 function aObj:checkFlyingAreas()
 
+	if aObj.timerunningSeasonID then
+		groundMounts = {
+			[484]  = true, -- Black Riding Yak
+			[2080] = true, -- Little Red Riding Goat
+		}
+		flyingMounts = {
+			[471]  = true, -- Onyx Cloud Serpent
+		}
+	end
+
+	-- reset favourite mounts
+	for idx = 1, _G.C_MountJournal.GetNumMounts() do
+		local _, _, mountID, _ = getMountInfo(idx)
+		if groundMounts[mountID]
+		or flyingMounts[mountID]
+		then
+			_G.C_MountJournal.SetIsFavorite(idx, true)
+		else
+			_G.C_MountJournal.SetIsFavorite(idx, false)
+		end
+	end
+
 	-- check mounts loop through all mounts until required one is found
 	local function checkMounts(mntID, isFav)
 		-- aObj:printD("checkMounts#1", mntID, isFav, _G.C_MountJournal.GetNumDisplayedMounts())
@@ -95,7 +123,7 @@ function aObj:checkFlyingAreas()
 		end
 	end
 
-	local function checkEvt(event) -- luacheck: ignore 212
+	local function checkEvt(event)
 		-- aObj:printD("regEvt#0", event)
 		-- wait for Zone info to be updated
 		_G.C_Timer.After(1, function()
@@ -208,7 +236,7 @@ function aObj:checkFlyingAreas()
 
 end
 
-function aObj:getMountInfo() -- luacheck: ignore self
+function aObj:getMountInfo()
 	local name, isFavourite, mountID, mountTypeID, mountTypeID2
 	for i = 1, _G.C_MountJournal.GetNumDisplayedMounts() do
 		name, isFavourite, mountID, mountTypeID = getMountInfo(i)

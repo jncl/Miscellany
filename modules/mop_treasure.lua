@@ -1,4 +1,3 @@
--- luacheck: ignore 212 631 (unused argument|line too long)
 local _, aObj = ...
 local _G = _G
 
@@ -12,7 +11,7 @@ function aObj:timelessIsleChests()
 		local todo = false
 		for k, info in pairs(tab) do
 			if not _G.C_QuestLog.IsQuestFlaggedCompleted(info["questID"]) then
-				aObj:printD(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
+				-- aObj:printD(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
 				_G.SlashCmdList.TOMTOM_WAY(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
 				todo = true
 			end
@@ -88,7 +87,7 @@ function aObj:isleOfThunderChests()
 
 		for k, info in pairs(tab) do
 			if not _G.C_QuestLog.IsQuestFlaggedCompleted(info["questID"]) then
-				aObj:printD(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
+				-- aObj:printD(_G.string.format("%s %s %s", "Timeless Isle", info["coords"], k))
 				_G.SlashCmdList.TOMTOM_WAY(_G.string.format("%s %s %s", "Isle of Thunder", info["coords"], k))
 			else
 				print("All Weekly Isle of Thunder Chests have been found")
@@ -237,7 +236,7 @@ function aObj:loreObjects()
 		for a, info in pairs(tab) do
 			-- local numCriteria = GetAchievementNumCriteria(info["achID"])
 			-- for i = 1, numCriteria do
-			-- 	printD(GetAchievementCriteriaInfo(info["achID"], i), i)
+			-- 	aObj:printD(GetAchievementCriteriaInfo(info["achID"], i), i)
 			-- end
 			local _, _, completed, _, _, _, _, _, _, _ = _G.GetAchievementCriteriaInfo(info["achID"], info["criIdx"])
 			if not completed then
@@ -334,3 +333,8 @@ function aObj:loreObjects()
 	checkTable(z, lore[z])
 
 end
+
+aObj.SCL["tic"] = aObj.timelessIsleChests
+aObj.SCL["itc"] = aObj.isleOfThunderChests
+aObj.SCL["pt"] = aObj.pandariaTreasures
+aObj.SCL["pl"] = aObj.loreObjects

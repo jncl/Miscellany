@@ -1,7 +1,7 @@
 local _, aObj = ...
 local _G = _G
 
-function aObj:AddDebugChatFrame() -- luacheck: ignore self
+function aObj.addDebugChatFrame(_)
 
 	local id = 10
 	local cf = _G["ChatFrame" .. id]
@@ -30,7 +30,11 @@ function aObj:AddDebugChatFrame() -- luacheck: ignore self
 			_G.FCF_SetChatWindowFontSize(nil, fObj, 12)
 			_G.FCF_SetWindowAlpha(fObj, 0)
 		end
-		if i == 1 then fObj:SetMaxLines(1000) end
+		if i == 1 then
+			fObj:SetMaxLines(1000)
+		end
 	end
 
 end
+
+aObj.SCL["dcf"] = aObj.addDebugChatFrame

@@ -42,7 +42,7 @@ else
 					_G.EquipmentManager_EquipSet(eSet)
 				end
 			end
-			aObj:printD(aName, "- Rogue's Stealth EquipmentSet detected")
+			-- aObj:printD(aName, "- Rogue's Stealth EquipmentSet detected")
 			local curSet, shifted = "Normal", false
 			aObj.ah.SecureHook(aName .. "-rogue", "UseEquipmentSet", function(setName)
 				if not shifted then curSet = setName end

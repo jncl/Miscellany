@@ -50,14 +50,15 @@ aObj.ae.RegisterEvent(aName .. "hunter", "PLAYER_LOGIN", function(_, _)
 end)
 
 -- track Pet Training spells
-function aObj:getHunterTraining() -- luacheck: ignore 212 (unused argument)
+function aObj:getHunterTraining()
 
 	local spells1 = {
 		['Blood Beasts']   = 54753,
-		['Gargon']         = 61160,
+		['Gargons']        = 61160,
 		['Cloud Serpents'] = 62254,
 		['Undead']         = 62255,
-		['Ottok']          = 66444,
+		-- ['Ottuks']          = 66444,
+		['Ottuks']         = 71184,
 		['Dragonkin']      = 72094,
 	}
 	local spells2 = {
@@ -74,3 +75,5 @@ function aObj:getHunterTraining() -- luacheck: ignore 212 (unused argument)
 	end
 
 end
+
+aObj.SCL["ght"] = aObj.getHunterTraining

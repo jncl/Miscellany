@@ -13,14 +13,14 @@ local fishingPoles = {
 	-- [118381] = true, -- Ephemeral Fishing Pole (duration 1 day)
 	-- [133755] = true, -- Underlight Angler
 }
-local fishingHats = {
-	19972, -- Lucky Fishing Hat (+5 Fishing)
-	33820, -- Weather-Beaten Fishing Hat (+5 Fishing) (Using this attaches a 10 min lure +75 Fishing)
-	88710, -- Nat's Hat (+5 Fishing) (Using this attaches a 10 min lure +150 Fishing)
-	93732, -- Darkmoon Fishing Cap (+5 Fishing)
-	118380, -- Highfish Cap (+100 Fishing) (7 days duration)
-	118393, -- Tentacled Hat (+100 Fishing) (5 days duration)
-}
+-- local fishingHats = {
+-- 	19972, -- Lucky Fishing Hat (+5 Fishing)
+-- 	33820, -- Weather-Beaten Fishing Hat (+5 Fishing) (Using this attaches a 10 min lure +75 Fishing)
+-- 	88710, -- Nat's Hat (+5 Fishing) (Using this attaches a 10 min lure +150 Fishing)
+-- 	93732, -- Darkmoon Fishing Cap (+5 Fishing)
+-- 	118380, -- Highfish Cap (+100 Fishing) (7 days duration)
+-- 	118393, -- Tentacled Hat (+100 Fishing) (5 days duration)
+-- }
 -- if aObj.isRtl then
 -- 	-- get fishing profession index
 -- 	local fishingIdx, _ = (_G.select(4, _G.GetProfessions())), 0
@@ -33,11 +33,16 @@ local fishingHats = {
 -- 	end
 -- end
 
-local mhSlotId = _G.GetInventorySlotInfo("MainHandSlot")
-local ohSlotId = _G.GetInventorySlotInfo("SecondaryHandSlot")
-local hSlotId  = _G.GetInventorySlotInfo("HeadSlot")
--- aObj:printD("Global MainHand, OffHand, Head slot ids", _G.mhWeapon, _G.ohWeapon, _G.helmet)
--- aObj:printD("MainHand, OffHand, Head slot ids", mhSlotId, ohSlotId, hSlotId)
+local mhSlotId, ohSlotId, hSlotId
+local function getItemIds()
+	mhSlotId = _G.GetInventorySlotInfo("MainHandSlot")
+	ohSlotId = _G.GetInventorySlotInfo("SecondaryHandSlot")
+	hSlotId  = _G.GetInventorySlotInfo("HeadSlot")
+	_G.misc_sv_pc.mhWeapon = _G.GetInventoryItemID("player", mhSlotId)
+	_G.misc_sv_pc.ohWeapon = _G.GetInventoryItemID("player", ohSlotId)
+	_G.misc_sv_pc.helmet   = _G.GetInventoryItemID("player", hSlotId)
+end
+-- TODO: need to hook a function to track equipment changes
 
 local fpEquipped = false
 local function chkWeapons()
@@ -47,27 +52,24 @@ local function chkWeapons()
 	-- check to see if fishing rod already equipped
 	if not _G.tContains(fishingPoles, mhItem) then
 		-- save current Weapon(s)
-		_G.mhWeapon, _G.ohWeapon = mhItem, ohItem
-		-- aObj:printD("current weapons:", _G.mhWeapon, _G.ohWeapon)
+		_G.misc_sv_pc.mhWeapon, _G.misc_sv_pc.ohWeapon = mhItem, ohItem
+		-- aObj:printD("current weapons:", _G.misc_sv_pc.mhWeapon, _G.misc_sv_pc.ohWeapon)
 		fpEquipped = false
 	else
 		fpEquipped = true
 	end
 end
-local fhEquipped = false
-local function chkHelmet()
-	local hsItem = _G.GetInventoryItemID("player", hSlotId)
+-- local fhEquipped = false
+-- local function chkHelmet()
+-- 	local hsItem = _G.GetInventoryItemID("player", hSlotId)
 
-	-- check to see if fishing hat already equipped
-	if not _G.tContains(fishingHats, hsItem) then
-		-- save current helmet
-		_G.helmet = hsItem
-		-- aObj:printD("current helmet:", _G.helmet)
-		fhEquipped = false
-	else
-		fhEquipped = true
-	end
-end
+-- 	-- check to see if fishing hat already equipped
+-- 	if not _G.tContains(fishingHats, hsItem) then
+-- 		fhEquipped = false
+-- 	else
+-- 		fhEquipped = true
+-- 	end
+-- end
 
 function aObj:startFishing()
 
@@ -77,7 +79,7 @@ function aObj:startFishing()
 	end
 
 	if not self.isRtl then
-		aObj.ae.RegisterEvent(aName, "PLAYER_EQUIPMENT_CHANGED", function(...)
+		aObj.ae.RegisterEvent(aName .. "fishing", "PLAYER_EQUIPMENT_CHANGED", function(...)
 			-- _G.print("startFishing PLAYER_EQUIPMENT_CHANGED", ...)
 		end)
 		chkWeapons()
@@ -117,8 +119,6 @@ function aObj:startFishing()
 
 		if self.isRtl then
 			_G.ActionStatus:DisplayMessage(_G.SOUND_EFFECTS_ENABLED)
-		else
-			_G.AudioOptionsFrame_AudioRestart()
 		end
 	end
 
@@ -135,10 +135,10 @@ function aObj:endFishing()
 		if fpEquipped then
 		-- if fishingPoles[_G.GetInventoryItemID("player", mhSlotId)] then
 			-- equip last used weapon(s)
-			_G.EquipItemByName(_G.mhWeapon, mhSlotId)
-			if _G.ohWeapon then _G.EquipItemByName(_G.ohWeapon, ohSlotId) end
+			_G.EquipItemByName(_G.misc_sv_pc.mhWeapon, mhSlotId)
+			if _G.misc_sv_pc.ohWeapon then _G.EquipItemByName(_G.misc_sv_pc.ohWeapon, ohSlotId) end
 			fpEquipped = false
-			-- self:printD("endFishing, re-equipping weapons", _G.mhWeapon, _G.ohWeapon)
+			-- self:printD("endFishing, re-equipping weapons", _G.misc_sv_pc.mhWeapon, _G.misc_sv_pc.ohWeapon)
 		end
 		-- -- check to see if fishing hat equipped
 		-- if fishingHats[_G.GetInventoryItemID("player", hSlotId)] then
@@ -147,7 +147,7 @@ function aObj:endFishing()
 		-- 	fhEquipped = false
 		-- 	self:printD("endFishing, re-equipping Helmet", _G.helmet)
 		-- end
-		aObj.ae.UnregisterEvent(aName, "PLAYER_EQUIPMENT_CHANGED")
+		aObj.ae.UnregisterEvent(aName .. "fishing", "PLAYER_EQUIPMENT_CHANGED")
 	end
 
 	if _G.C_CVar.GetCVarBool("Sound_EnableAllSound") then
@@ -160,8 +160,19 @@ function aObj:endFishing()
 		if self.isRtl then
 			_G.ActionStatus:DisplayMessage(_G.SOUND_EFFECTS_DISABLED)
 		else
-			_G.AudioOptionsFrame_AudioRestart()
+
 		end
 	end
 
 end
+
+aObj.RegisterCallback(aName .. "fishing", "AddOn_Loaded", function(_, _)
+	_G.misc_sv_pc.mhWeapon = _G.misc_sv_pc.mhWeapon or 0
+	_G.misc_sv_pc.ohWeapon = _G.misc_sv_pc.ohWeapon or 0
+	_G.misc_sv_pc.helmet   = _G.misc_sv_pc.helmet or 0
+	getItemIds()
+	aObj:printD("fishing AddOn_Loaded:", mhSlotId, ohSlotId, hSlotId)
+	aObj.UnregisterCallback(aName .. "fishing", "AddOn_Loaded")
+end)
+aObj.SCL["sf"] = aObj.startFishing
+aObj.SCL["ef"] = aObj.endFishing

@@ -20,6 +20,7 @@
 <Script file="modules/nzoth_rares.lua"/>
 <Script file="modules/questlevel.lua"/>
 <Script file="modules/remix.lua"/>
+<Script file="modules/widen_tad.lua"/>
 <!-- <Script file="modules/pet_battles.lua"/> -->
 <!-- <Script file="modules/rogue.lua"/> -->
 

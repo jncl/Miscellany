@@ -1,6 +1,9 @@
 local _, aObj = ...
 local _G = _G
 
+-- Maximum sellPrice
+local maxSP = 250
+
 local delItems = {
 	34498, -- Paper Zepplin Kit
 }
@@ -8,7 +11,7 @@ local function deleteItem(item, button)
     if button == "RightButton"
     and _G.IsAltKeyDown()
     then
-		local bagID, slotID, info
+		local bagID, slotID, info, itemInfo
 		-- print("RB & Alt keys pressed")
 		if not aObj.isRtl then
 			bagID, slotID = item:GetParent():GetID(), item:GetID()
@@ -17,17 +20,14 @@ local function deleteItem(item, button)
 		end
 		-- _G.Spew("item", item, bagID, slotID)
 		info = _G.C_Container.GetContainerItemInfo(bagID, slotID)
-		-- _G.Spew("info", info)
-		-- print("Item values", item.hasItem, info.hasNoValue, not info.isLocked)
+		itemInfo = {_G.C_Item.GetItemInfo(info.itemID)}
 		if item.hasItem
 		and not info.isLocked
-		and info.hasNoValue
+		and (info.hasNoValue or itemInfo[11] <= maxSP)
 		or _G.tContains(delItems, info.itemID)
 		then
-			-- print("PickupContainerItem", item)
 			_G.C_Container.PickupContainerItem(bagID, slotID)
 			if _G.CursorHasItem() then
-				-- print("CursorHasItem", item)
 				_G.DeleteCursorItem()
 			end
 		end

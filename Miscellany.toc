@@ -1,4 +1,4 @@
-## Interface: 11502, 100207, 40400
+## Interface: 110005, 40401, 11505
 
 ## Title: Miscellany
 ## IconTexture: Interface\Icons\INV_Drink_05
@@ -9,8 +9,7 @@
 
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-## SavedVariables: flyingMounts
-## SavedVariablesPerCharacter: battle_pets, mhWeapon, ohWeapon, helmet, autoquests
+## SavedVariablesPerCharacter: misc_sv_pc
 ## Globe: check-classic
 
 Libs\_RequiredLibs.xml

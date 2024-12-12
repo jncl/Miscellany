@@ -1,4 +1,3 @@
--- luacheck: ignore 212 631 (unused argument|line too long)
 local aName, aObj = ...
 local _G = _G
 
@@ -132,7 +131,7 @@ function aObj:checkFlyingAreas()
 			then
 				return
 			end
-			local cMAID, rZone, rSubZone = _G.C_Map.GetBestMapForUnit("player"), _G.GetRealZoneText(), _G.GetSubZoneText() -- luacheck: ignore 211
+			local cMAID, rZone, rSubZone = _G.C_Map.GetBestMapForUnit("player"), _G.GetRealZoneText(), _G.GetSubZoneText()
 			-- aObj:printD("regEvt#1", cMAID, rZone, rSubZone)
 			if not cMAID then return end
 			local isFav = true
@@ -193,7 +192,7 @@ function aObj:checkFlyingAreas()
 	checkAchievements()
 	if chkEvt then
 		self.ae.RegisterEvent(aName .. "flyingmounts", "ACHIEVEMENT_EARNED", function(...)
-			self:printD(...)
+			-- self:printD(...)
 			checkAchievements()
 			checkEvt("ACHIEVEMENT_EARNED")
 		end)
@@ -219,7 +218,7 @@ function aObj:checkFlyingAreas()
 	checkSpellss()
 	if chkEvt then
 		self.ae.RegisterEvent(aName .. "flyingmounts", "SPELLS_CHANGED", function(...)
-			self:printD(...)
+			-- self:printD(...)
 			checkSpellss()
 			checkEvt("SPELLS_CHANGED")
 		end)
@@ -247,3 +246,5 @@ function aObj:getMountInfo()
 		end
 	end
 end
+
+aObj.SCL["gmi"] = aObj.getMountInfo

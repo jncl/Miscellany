@@ -25,10 +25,10 @@ local chickenQuests = {
 }
 
 local qTab = {}
-function aObj:chickenQuests() -- luacheck: ignore self
+function aObj:chickenQuests()
 
 	_G.GetQuestsCompleted(qTab)
-	aObj:printD("#Completed Quests: ", #qTab)
+	-- aObj:printD("#Completed Quests: ", #qTab)
 
 	for k, v in _G.pairs(chickenQuests) do
 		print(k, "chicken quests:")
@@ -43,8 +43,11 @@ function aObj:chickenQuests() -- luacheck: ignore self
 
 end
 
-function aObj:doChicken() -- luacheck: ignore self
+function aObj:doChicken()
 
 	_G.C_Timer.NewTicker(2.5, function() _G.DoEmote("CHICKEN") end, 50)
 
 end
+
+aObj.SCL["cq"] = aObj.chickenQuests
+aObj.SCL["dc"] = aObj.doChicken

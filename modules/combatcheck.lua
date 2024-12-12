@@ -10,9 +10,9 @@ aObj.ae.RegisterEvent(aName, "PLAYER_REGEN_DISABLED", function(_)
 	-- equip "Normal" set if a fishing pole is equipped
 	local mH = 	_G.GetInventoryItemLink("player", _G.GetInventorySlotInfo("MainHandSlot"))
 	if mH then
-		local itemType = _G.select(7, _G.GetItemInfo(mH))
+		local itemType = _G.select(7, _G.C_Item.GetItemInfo(mH))
 		if itemType == "Fishing Poles"
-		and _G.GetNumEquipmentSets() > 0
+		and _G.C_EquipmentSet.GetNumEquipmentSets() > 0
 		then
 			_G.EquipmentManager_EquipSet(1) -- Normal set
 		end

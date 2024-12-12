@@ -1,4 +1,3 @@
--- luacheck: ignore 631 (line is too long)
 local aName, aObj = ...
 local _G = _G
 
@@ -95,7 +94,7 @@ end
 
 function aObj:cbJostle(offset)
 
-	if _G.IsAddOnLoaded("ChocolateBar") then
+	if _G.C_AddOns.IsAddOnLoaded("ChocolateBar") then
 		self:moveThem(offset)
 	end
 

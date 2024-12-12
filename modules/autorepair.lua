@@ -1,42 +1,41 @@
 local aName, aObj = ...
 local _G = _G
 
-local GetContainerNumSlots = _G.C_Container and _G.C_Container.GetContainerNumSlots or _G.GetContainerNumSlots
-local GetContainerItemLink = _G.C_Container and _G.C_Container.GetContainerItemLink or _G.GetContainerItemLink
-local PickupContainerItem = _G.C_Container and _G.C_Container.PickupContainerItem or _G.PickupContainerItem
-local GetItemInfo = _G.C_Container and _G.C_Container.GetItemInfo or _G.GetItemInfo
+function aObj.autoRepair(_)
 
--- AutoRepair by Ygrane
--- Sell Junk by Tekkub
-aObj.ae.RegisterEvent(aName, "MERCHANT_SHOW", function(_)
-	-- _G.print("Misc - autorepair", _G.GetRealZoneText(), _G.UnitName("NPC"))
-	if _G.select(2, _G.GetRepairAllCost()) then _G.RepairAllItems() end
+	aObj:printD("autoRepair loaded", _G.misc_sv_pc.autorepair)
 
-	-- N.B. CAN'T sell junk at Worn Anvil(s) in Torghast, Tower of the Damned
-	if _G.GetRealZoneText():find("Torghast")
-	and _G.UnitName("NPC") == "Worn Anvil"
-	then
+	-- if autoqrepair isn't set then Unregister Events and return
+	if not _G.misc_sv_pc.autorepair then
+		aObj.ae.UnregisterEvent(aName .. "autorepair", "MERCHANT_SHOW")
 		return
 	end
 
-	if _G.IsShiftKeyDown() then return end
+	aObj.ae.RegisterEvent(aName .. "autorepair", "MERCHANT_SHOW", function(...)
+		aObj:printD(..., _G.select(2, _G.GetRepairAllCost()), _G.C_MerchantFrame.GetNumJunkItems(), _G.C_MerchantFrame.IsSellAllJunkEnabled())
 
-	-- Sell Junk, based upon code from SellJunk
-	local iteminfo
-	for bag = 0, 4 do
-		for slot = 1, GetContainerNumSlots(bag) do
-			local link = GetContainerItemLink(bag, slot)
-			if link then
-				iteminfo = {GetItemInfo(link)}
-				if iteminfo[3] == 0 then -- itemQuality
-					-- ignore unsellable junk items
-					if iteminfo[11] > 0 then -- sellPrice
-						PickupContainerItem(bag, slot)
-						_G.PickupMerchantItem(0)
-					end
-				end
-			end
+		if _G.select(2, _G.GetRepairAllCost()) then -- check to see if merchant can repair
+			_G.RepairAllItems(true) -- use GuildFunds if available
 		end
-	end
 
+		if _G.IsShiftKeyDown() then return end
+
+		if _G.C_MerchantFrame.GetNumJunkItems()
+		and _G.C_MerchantFrame.IsSellAllJunkEnabled()
+		then
+			_G.C_MerchantFrame.SellAllJunkItems()
+		end
+
+	end)
+
+end
+
+aObj.RegisterCallback(aName .. "autorepair", "AddOn_Loaded", function(_, _)
+	_G.misc_sv_pc.autorepair = _G.misc_sv_pc.autorepair or false
+	aObj.autoRepair()
+	aObj.UnregisterCallback(aName .. "autorepair", "AddOn_Loaded")
 end)
+aObj.SCL["ar"] = function()
+	_G.misc_sv_pc.autorepair = not _G.misc_sv_pc.autorepair
+	aObj.autoRepair()
+end

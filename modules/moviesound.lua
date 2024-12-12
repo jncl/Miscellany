@@ -1,4 +1,3 @@
--- luacheck: ignore 631 (line is too long)
 local aName, aObj = ...
 local _G = _G
 
@@ -6,13 +5,13 @@ local allSound, soundMasterVolume
 local function getOriginalSettings()
 	allSound            = _G.C_CVar.GetCVar("Sound_EnableAllSound")
 	soundMasterVolume   = _G.C_CVar.GetCVar("Sound_MasterVolume")
-	aObj:printD("getOriginalSettings", allSound, soundMasterVolume)
+	-- aObj:printD("getOriginalSettings", allSound, soundMasterVolume)
 end
 
 local function setOriginalSettings()
 	_G.C_CVar.SetCVar("Sound_EnableAllSound", allSound)
 	_G.C_CVar.SetCVar("Sound_MasterVolume", soundMasterVolume)
-	aObj:printD("setOriginalSettings", allSound, soundMasterVolume)
+	-- aObj:printD("setOriginalSettings", allSound, soundMasterVolume)
 end
 
 -- turn on sound when CinematicFrame or MovieFrame shows

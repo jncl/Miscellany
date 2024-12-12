@@ -1,4 +1,3 @@
--- luacheck: ignore 212 631 (unused argument|line is too long)
 local _, aObj = ...
 local _G = _G
 
@@ -6,7 +5,7 @@ function aObj:checkRemix()
 
 	-- MoP: Remix
 	aObj.timerunningSeasonID = not not _G.PlayerGetTimerunningSeasonID()
-	aObj:printD("timerunning Character", aObj.timerunningSeasonID)
+	-- aObj:printD("timerunning Character", aObj.timerunningSeasonID)
 
 	local instInfo
 	-- automatically open Cache of Infinite Treasure

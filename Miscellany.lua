@@ -1,10 +1,9 @@
--- luacheck: ignore 212 631 (unused argument|line is too long)
 local aName, aObj = ...
 local _G = _G
 
-aObj.debug = false
+_G.misc_sv_pc = _G.misc_sv_pc or {}
 
-local assert, print, select, pairs = _G.assert, _G.print, _G.select, _G.pairs
+aObj.debug = false
 
 aObj.isClsc       = _G.C_CVar.GetCVar("agentUID") == "wow_classic" and true
 aObj.isClscPTR    = _G.C_CVar.GetCVar("agentUID") == "wow_classic_ptr" and true
@@ -12,24 +11,25 @@ aObj.isClscERA    = _G.C_CVar.GetCVar("agentUID") == "wow_classic_era" and true
 aObj.isClscERAPTR = _G.C_CVar.GetCVar("agentUID") == "wow_classic_era_ptr" and true
 aObj.isClsc       = aObj.isClsc or aObj.isClscPTR
 aObj.isClscERA    = aObj.isClscERA or aObj.isClscERAPTR
+aObj.isRtl        = _G.C_CVar.GetCVar("agentUID") == "wow" and true
+aObj.isRtlPTR     = _G.C_CVar.GetCVar("agentUID") == "wow_ptr" and true
+aObj.isRtlPTRX    = _G.C_CVar.GetCVar("agentUID") == "wow_ptr_x" and true
+aObj.isRtlBeta    = _G.C_CVar.GetCVar("agentUID") == "wow_beta" and true
+aObj.isRtl        = aObj.isRtl or aObj.isRtlPTR or aObj.isRtlPTRX or aObj.isRtlBeta
 
-aObj.isRtl     = _G.C_CVar.GetCVar("agentUID") == "wow" and true
-aObj.isRtlPTR  = _G.C_CVar.GetCVar("agentUID") == "wow_ptr" and true
-aObj.isRtlPTRX = _G.C_CVar.GetCVar("agentUID") == "wow_ptr_x" and true
-aObj.isRtlBeta = _G.C_CVar.GetCVar("agentUID") == "wow_beta" and true
-aObj.isRtl     = aObj.isRtl or aObj.isRtlPTR or aObj.isRtlPTRX or aObj.isRtlBeta
+-- _G.print(aName, "ver", aObj.isClsc, aObj.isClscERA, aObj.isRtl)
 
 -- store player class as English Spelling
 aObj.uCls = _G.select(2, _G.UnitClass("player"))
 
--- print("Misc ver", aObj.isClsc, aObj.isClscERA, aObj.isRtl)
-
 -- out of combat table
 aObj.oocTab = {}
 
-function aObj:printD(...)
+function aObj.printD(_, ...)
+
 	if not aObj.debug then return end
 	_G.print(("%s [%s.%03d]"):format(aName, _G.date("%H:%M:%S"), (_G.GetTime() % 1) * 1000), ...)
+
 end
 
 local LibStub = _G.LibStub
@@ -40,101 +40,66 @@ for _, lib in _G.pairs{"AceEvent-3.0", "AceHook-3.0", "CallbackHandler-1.0"} do
 end
 aObj.ae = LibStub("AceEvent-3.0")
 aObj.ah = LibStub("AceHook-3.0")
+aObj.callbacks = LibStub:GetLibrary("CallbackHandler-1.0", true):New(aObj)
 
-_G.SLASH_MISC1 = '/misc'
-aObj.loud = false
-function _G.SlashCmdList.MISC(msg, _)
-
-	local cmds = { (" "):split(msg) }
-
-	-- get Completed quest info
-	if cmds[1] == "chickenq" then
-		aObj:chickenQuests()
-	elseif cmds[1] == "dc" then
-		aObj:doChicken()
-	elseif cmds[1] == "debug" then
-		aObj.debug = not aObj.debug
-		_G.print("Debug ", aObj.debug and "enabled" or "disabled")
-	elseif cmds[1] == "loud" then
-		aObj.loud = not aObj.loud
-	elseif cmds[1] == "sf" then
-		aObj:startFishing()
-	elseif cmds[1] == "ef" then
-		aObj:endFishing()
-	elseif cmds[1] == "bpet" then _G.battle_pets = not _G.battle_pets
-	elseif cmds[1] == "gmi" then
-		aObj:getMountInfo()
-	-- MoP specific
-	elseif cmds[1] == "tic" then
-		aObj:timelessIsleChests()
-	elseif cmds[1] == "itc" then
-		aObj:isleOfThunderChests()
-	elseif cmds[1] == "pt" then
-		aObj:pandariaTreasures()
-	elseif cmds[1] == "pl" then
-		aObj:loreObjects()
-	-- legion specific
-	elseif cmds[1] == "lth" then
-		aObj:checkLTQHighmountain()
-	elseif cmds[1] == "ltq" then
-		aObj:checkLTQ(msg)
-	-- BfA
-	elseif cmds[1] == "ait" then
-		aObj:alpacaItUp()
-	elseif cmds[1] == "eq" then
-		aObj:elusiveQuickhoof()
-	elseif cmds[1] == "lib" then
-		aObj:lessonsInBrigandry()
-	elseif cmds[1] == "plp" then
-		aObj:plunderThePlunderers()
-	elseif cmds[1] == "tftd" then
-		aObj:TerrorsFromTheDeep()
-	elseif cmds[1] == "tskc" then
-		aObj:TheSunKingsChosen()
-	-- Jostle
-	elseif cmds[1] == "cbj" then
-		aObj:cbJostle(cmds[2])
-		-- EquipmentSet info
-	elseif cmds[1] == "esi" then
-		local esNum = _G.C_EquipmentSet.GetNumEquipmentSets()
-		_G.print("GetNumEquipmentSets()", esNum)
-		for i = 0, esNum - 1 do
-			_G.print(i, _G.C_EquipmentSet.GetEquipmentSetInfo(i))
-		end
-	elseif cmds[1] == "clrs" then
-		_G.print("showing RAID_CLASS_COLORS")
-		for k, v in pairs(_G.RAID_CLASS_COLORS) do
-			v["name"] = k
-			_G.print("RCC", v)
-		end
-	-- enable Automatic Quest Tracking
-	elseif cmds[1] == "aq" then
-		-- _G.print("Miscellany: autoQuest settings", _G.C_CVar.GetCVar("autoQuestWatch"), _G.C_CVar.GetCVar("autoQuestProgress"))
-		_G.autoquests = not _G.autoquests
-		_G.print("Miscellany autoquests setting:", _G.autoquests)
-		aObj:autoQuests()
-	elseif cmds[1]:lower() == "locate" then
-		print("You Are Here: [", _G.GetRealZoneText(), "][", _G.GetSubZoneText(), "][", _G.C_Map.GetBestMapForUnit("player"), "]")
-	elseif cmds[1]:lower() == "mapinfo" then
-		local uiMapID = _G.C_Map.GetBestMapForUnit("player")
-		local mapinfo = _G.C_Map.GetMapInfo(uiMapID)
-		local posn = _G.C_Map.GetPlayerMapPosition(uiMapID, "player")
-		local areaName= _G.MapUtil.FindBestAreaNameAtMouse(uiMapID, posn["x"], posn["y"])
-		print("Map Info:", mapinfo["mapID"], mapinfo["name"], mapinfo["mapType"], mapinfo["parentMapID"], posn["x"], posn["y"], areaName)
-	elseif cmds[1] == "dcf" then
-		aObj:AddDebugChatFrame()
-	elseif cmds[1] == "pcf1" then
-		_G.ProfessionsCrafterOrders_LoadUI()
-		_G.ShowUIPanel(_G.ProfessionsCrafterOrdersFrame)
-	elseif cmds[1] == "pcf2" then
-		_G.ProfessionsCustomerOrders_LoadUI()
-		_G.ShowUIPanel(_G.ProfessionsCustomerOrdersFrame)
-	elseif cmds[1] == "ght" then
-		aObj:getHunterTraining()
-	elseif cmds[1] == "cq" then
-		aObj:checkQuest(cmds[2])
+-- Slash Command List entries
+aObj.SCL = {}
+aObj.SCL["cbl"] = function()
+	aObj:cbJostle()
+	_G.print("Jostled ChocolateBar")
+end
+aObj.SCL["clrs"] = function()
+	_G.print("showing RAID_CLASS_COLORS")
+	for k, v in _G.pairs(_G.RAID_CLASS_COLORS) do
+		v["name"] = k
+		_G.print("RCC", v)
 	end
-	-- printD("slash command:", msg, editbox)
+end
+aObj.SCL["debug"] = function()
+	aObj.debug = not aObj.debug
+	_G.print("Debug ", aObj.debug and "enabled" or "disabled")
+end
+aObj.SCL["esi"] = function()
+	local esNum = _G.C_EquipmentSet.GetNumEquipmentSets()
+	_G.print("GetNumEquipmentSets()", esNum)
+	for i = 0, esNum - 1 do
+		_G.print(i, _G.C_EquipmentSet.GetEquipmentSetInfo(i))
+	end
+end
+aObj.SCL["locate"] = function()
+	_G.print("You Are Here: [", _G.GetRealZoneText(), "][", _G.GetSubZoneText(), "][", _G.C_Map.GetBestMapForUnit("player"), "]")
+end
+aObj.SCL["mapinfo"] = function()
+	local uiMapID = _G.C_Map.GetBestMapForUnit("player")
+	local mapinfo = _G.C_Map.GetMapInfo(uiMapID)
+	local posn = _G.C_Map.GetPlayerMapPosition(uiMapID, "player")
+	local areaName= _G.MapUtil.FindBestAreaNameAtMouse(uiMapID, posn["x"], posn["y"])
+	_G.print("Map Info:", mapinfo["mapID"], mapinfo["name"], mapinfo["mapType"], mapinfo["parentMapID"], posn["x"], posn["y"], areaName)
+end
+aObj.SCL["pcf1"] = function()
+	_G.ProfessionsCrafterOrders_LoadUI()
+	_G.ShowUIPanel(_G.ProfessionsCrafterOrdersFrame)
+end
+aObj.SCL["pcf2"] = function()
+	_G.ProfessionsCustomerOrders_LoadUI()
+	_G.ShowUIPanel(_G.ProfessionsCustomerOrdersFrame)
+end
+aObj.SCL["ssv"] = function()
+	_G.Spew("m_sv_pc", _G.misc_sv_pc)
+end
+
+_G.SLASH_MISCELLANY1 = '/misc'
+function _G.SlashCmdList.MISCELLANY(msg, _)
+
+	local cmd1, cmd2 = (" "):split(msg)
+
+	aObj:printD("slash command:", msg, cmd1, cmd2, aObj.SCL[cmd1])
+
+	if #cmd1 > 0 then -- check for empty string
+		if aObj.SCL[cmd1] then
+			aObj.SCL[cmd1](aObj, cmd2)
+		end
+	end
 
 end
 
@@ -156,13 +121,11 @@ aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(_, _)
 			_G.LootButton5.id = 5
 			_G.LOOTFRAME_NUMBUTTONS = 5
 		end
-	end
-
-	if aObj.isRtl then
+	else
 		local aqw, aqp = 0, 0
 		-- if not running AAP-Core then automatically watch quests & their progress
-		if not _G.IsAddOnLoaded("AAP-Core") then
-			-- printD("autoQuest", _G.C_CVar.GetCVar("autoQuestWatch"), _G.C_CVar.GetCVar("autoQuestProgress"))
+		if not _G.C_AddOns.IsAddOnLoaded("AAP-Core") then
+			-- aObj:printD("autoQuest", _G.C_CVar.GetCVar("autoQuestWatch"), _G.C_CVar.GetCVar("autoQuestProgress"))
 			aqw, aqp = 1, 1
 		end
 		-- automatically add quests id required
@@ -171,7 +134,7 @@ aObj.ae.RegisterEvent(aName, "PLAYER_LOGIN", function(_, _)
 		_G.C_CVar.SetCVar("autoQuestProgress", aqp)
 
 		aObj:checkRemix()
-		
+
 		aObj:checkFlyingAreas()
 
 	end
@@ -190,33 +153,17 @@ local trackedAddonsSeen = {
 	[aName] = false,
 	["Blizzard_PetJournal"] = false,
 	["Blizzard_FlightMap"] = false,
+	["Blizzard_DebugTools"] = false,
 }
-local allSeen = false
 aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(_, addon)
 	-- aObj:printD(event, addon)
 
-	-- -- Pet Battle functions
-	-- if addon == aName then
-	-- 	trackedAddonsSeen[addon] = true
-	-- 	if battle_pets then
-	-- 		-- PetBattle health check
-	-- 		aObj:checkPetHealth(nil, _G.GetTime())
-	-- 	end
-	-- end
-	--
+	trackedAddonsSeen[addon] = true
 
 	if addon == aName then
-		trackedAddonsSeen[addon] = true
+		-- N.B. Saved variables have now been loaded
 
-		-- battle_pets, mhWeapon, ohWeapon, helmet, autoquests
-		-- aObj:printD("AL#1", _G.battle_pets, _G.mhWeapon, _G.ohWeapon, _G.helmet, _G.autoquests)
-
-		if _G.autoquests == nil then
-			_G.autoquests = false
-		end
-		-- aObj:printD("AutoQuest setting", _G.autoquests)
-		-- enable Auto Quests functions
-		if _G.autoquests then aObj:autoQuests() end
+		aObj.callbacks:Fire("AddOn_Loaded", addon)
 
 		-- increase Max Zoom Factor
 		_G.C_CVar.SetCVar("cameraDistanceMaxZoomFactor", 2.9)
@@ -224,38 +171,22 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(_, addon)
 
 	end
 
-	-- -- show BugSack minimap icon if required
-	-- if addon == aName then
-	-- 	local li = LibStub:GetLibrary("LibDBIcon-1.0", true)
-	-- 	if li then
-	-- 		if _G.IsAddOnLoaded("ChocolateBar") then
-	-- 			li:Hide("BugSack")
-	-- 			_G.BugSackLDBIconDB.hide = true
-	-- 		else
-	-- 			li:Show("BugSack")
-	-- 			_G.BugSackLDBIconDB.hide = false
-	-- 		end
-	-- 	end
-	-- 	li  = nil
-	-- end
-
 	-- filter sources to remove Promotion & Trading Card Game sources
 	if addon == "Blizzard_PetJournal" then
-		trackedAddonsSeen[addon] = true
 		_G.C_PetJournal.SetPetSourceFilter(8, false) -- Promotion
 		_G.C_PetJournal.SetPetSourceFilter(9, false) -- Trading Card Game
 		_G.UIDropDownMenu_Refresh(_G.PetJournalFilterDropDown, 2, 2)
 	end
 
 	if addon == "Blizzard_FlightMap" then
-		trackedAddonsSeen[addon] = true
 		_G.FlightMapFrame:SetScale(1.25)
 	end
 
-	for _, seen in pairs(trackedAddonsSeen) do
-		if not seen then allSeen = false end
+	if addon == "Blizzard_DebugTools" then
+		aObj:widenTAD()
 	end
-	if allSeen then
+
+	if not _G.tContains(trackedAddonsSeen, false) then
 		aObj.ae.UnregisterEvent(aName, "ADDON_LOADED")
 	end
 
@@ -266,33 +197,51 @@ _G.TaxiFrame:SetScale(1.5)
 
 -- Only show Available skills at trainer
 aObj.ae.RegisterEvent(aName, "TRAINER_SHOW", function(_)
-	_G.SetTrainerServiceTypeFilter("unavailable", 0)
+	_G.C_Timer.After(0.005, function()
+		_G.SetTrainerServiceTypeFilter("unavailable", false)
+	end)
 end)
 
+local eventChecks, event, eTab = {
+	[_G.SPELL_FAILED_NOT_MOUNTED]       = {func=_G.Dismount},
+	[_G.ERR_TAXIPLAYERALREADYMOUNTED]   = {func=_G.Dismount},
+	[_G.ERR_ATTACK_MOUNTED]             = {func=_G.Dismount},
+	[_G.ERR_GUILD_WITHDRAW_LIMIT]       = {func=_G.RepairAllItems},
+	[_G.SPELL_FAILED_NOT_STANDING]      = {func=_G.DoEmote, arg="Stand"},
+	[_G.ERR_CANT_INTERACT_SHAPESHIFTED] = {func=_G.CancelShapeshiftForm},
+}
 -- handle UI error messages when required
 aObj.ae.RegisterEvent(aName, "UI_ERROR_MESSAGE", function(_, ...)
+	-- aObj:printD("UI_ERROR_MESSAGE", select(1, ...), select(2, ...))
 
-	-- aObj:printD(select(1, ...), select(2, ...))
+	event = _G.select(2, ...)
 
-	-- dismount if required
-	if select(2, ...) == _G.SPELL_FAILED_NOT_MOUNTED
-	or select(2, ...) == _G.ERR_TAXIPLAYERALREADYMOUNTED
-	or select(2, ...) == _G.ERR_ATTACK_MOUNTED
-	-- or select(2, ...) == "Can't attack while mounted."
-	-- unmount when attacking
-	then
-		_G.Dismount()
-	-- handle no Guild Bank funds for repairs
-	elseif select(2, ...) == _G.ERR_GUILD_WITHDRAW_LIMIT then
-		_G.RepairAllItems()
-	-- handle not standing when summoning pet etc.
-	elseif select(2, ...) == _G.SPELL_FAILED_NOT_STANDING then
-		_G.DoEmote("Stand")
-	-- handle shapeshift form, Druid
-	-- elseif select(2, ...) == _G.ERR_CANT_INTERACT_SHAPESHIFTED
-	-- or select(2, ...) == _G.ERR_CANT_INTERACT_SHAPESHIFTED
-	-- then
-	-- 	-- CancelShapeshiftForm()
+	eTab = eventChecks[event]
+	if eTab then
+		eTab.func(eTab.arg)
 	end
 
 end)
+
+-- move frame down if chocolate bar is loaded
+if _G.C_AddOns.IsAddOnLoaded("ChocolateBar") then
+	_G.UIWidgetTopCenterContainerFrame:SetPoint("TOP", 0, -25)
+end
+
+-- Close Chat Info popup
+aObj.ah:SecureHookScript(_G.StaticPopup1, "OnShow", function(this)
+	if this.which == "REGIONAL_CHAT_DISABLED" then
+		this.button2:Click()
+	end
+end)
+
+-- show minimap tracking frame
+if not aObj.isRtl then
+	_G.C_Timer.After(1, function()
+		local icon = _G._G.GetTrackingTexture()
+		if icon then
+			_G.MiniMapTrackingIcon:SetTexture(icon)
+			_G.MiniMapTracking:Show()
+		end
+	end)
+end

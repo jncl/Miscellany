@@ -159,8 +159,6 @@ function aObj:endFishing()
 
 		if self.isRtl then
 			_G.ActionStatus:DisplayMessage(_G.SOUND_EFFECTS_DISABLED)
-		else
-
 		end
 	end
 

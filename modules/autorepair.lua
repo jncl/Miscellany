@@ -12,7 +12,11 @@ function aObj.autoRepair(_)
 	end
 
 	aObj.ae.RegisterEvent(aName .. "autorepair", "MERCHANT_SHOW", function(...)
-		aObj:printD(..., _G.select(2, _G.GetRepairAllCost()), _G.C_MerchantFrame.GetNumJunkItems(), _G.C_MerchantFrame.IsSellAllJunkEnabled())
+		if aObj.isRtl then
+			aObj:printD(..., _G.select(2, _G.GetRepairAllCost()), _G.C_MerchantFrame.GetNumJunkItems(), _G.C_MerchantFrame.IsSellAllJunkEnabled())
+		else
+			_G.nop()
+		end
 
 		if _G.select(2, _G.GetRepairAllCost()) then -- check to see if merchant can repair
 			_G.RepairAllItems(true) -- use GuildFunds if available
@@ -20,10 +24,15 @@ function aObj.autoRepair(_)
 
 		if _G.IsShiftKeyDown() then return end
 
-		if _G.C_MerchantFrame.GetNumJunkItems()
-		and _G.C_MerchantFrame.IsSellAllJunkEnabled()
-		then
-			_G.C_MerchantFrame.SellAllJunkItems()
+		if aObj.isRtl then
+			if _G.C_MerchantFrame.GetNumJunkItems()
+			and _G.C_MerchantFrame.IsSellAllJunkEnabled()
+			then
+				_G.C_MerchantFrame.SellAllJunkItems()
+			end
+		else
+			-- loop through items and sell junk
+			_G.nop()
 		end
 
 	end)

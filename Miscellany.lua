@@ -154,6 +154,7 @@ local trackedAddonsSeen = {
 	["Blizzard_PetJournal"] = false,
 	["Blizzard_FlightMap"] = false,
 	["Blizzard_DebugTools"] = false,
+	["ChocolateBar"] = false,
 }
 aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(_, addon)
 	-- aObj:printD(event, addon)
@@ -183,7 +184,15 @@ aObj.ae.RegisterEvent(aName, "ADDON_LOADED", function(_, addon)
 	end
 
 	if addon == "Blizzard_DebugTools" then
-		aObj:widenTAD()
+		aObj.widenTAD()
+	end
+
+	if addon == "ChocolateBar"
+	and aObj.adjustBars
+	then
+		_G.C_Timer.After(0.25, function()
+			aObj.adjustBars()
+		end)
 	end
 
 	if not _G.tContains(trackedAddonsSeen, false) then
@@ -222,11 +231,6 @@ aObj.ae.RegisterEvent(aName, "UI_ERROR_MESSAGE", function(_, ...)
 	end
 
 end)
-
--- move frame down if chocolate bar is loaded
-if _G.C_AddOns.IsAddOnLoaded("ChocolateBar") then
-	_G.UIWidgetTopCenterContainerFrame:SetPoint("TOP", 0, -25)
-end
 
 -- Close Chat Info popup
 aObj.ah:SecureHookScript(_G.StaticPopup1, "OnShow", function(this)

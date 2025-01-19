@@ -6,6 +6,7 @@
 <Script file="modules/autorepair.lua"/>
 <Script file="modules/bagsopen.lua"/>
 <Script file="modules/chickenquests.lua"/>
+<Script file="modules/chocolatebar.lua"/>
 <Script file="modules/combatcheck.lua"/>
 <Script file="modules/debugchatframe.lua"/>
 <Script file="modules/deleteitems.lua"/>
